@@ -1,0 +1,11 @@
+services:
+  mongo-exforge:
+    build:
+      context: ./application
+    container_name: mongo-exforgee
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./application/.env
+    command: node dist/main.js
+    restart: unless-stopped

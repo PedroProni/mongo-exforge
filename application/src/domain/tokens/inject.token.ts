@@ -1,0 +1,1 @@
+export const JOB_INJECT_TOKEN = Symbol('JOB_INJECT_TOKEN');

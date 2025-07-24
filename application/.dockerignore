@@ -1,0 +1,21 @@
+# Ignorar variáveis sensíveis
+.env.example
+.env.production
+.env.development
+
+# Ignorar credenciais locais
+.aws/
+*.pem
+*.key
+
+# Ignorar configs pessoais e cache
+*.log
+*.DS_Store
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Ignorar arquivos de build
+dist/
+coverage/
+tmp/
