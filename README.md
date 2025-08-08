@@ -130,11 +130,3 @@ docker build -t mongo-exforge .
 # Run the container
 docker run -p 3000:3000 --env-file .env mongo-exforge
 ```
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
