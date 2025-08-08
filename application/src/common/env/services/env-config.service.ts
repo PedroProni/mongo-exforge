@@ -4,24 +4,29 @@ import { IEnvConfig } from '@shared/interfaces/env-config.interface';
 
 @Injectable()
 export class EnvConfigService implements IEnvConfig {
-    constructor(private configService: ConfigService) { }
-    
-    // Persistance
-    getMongoUri(): string {
-        return this.configService.get<string>('MONGODB_URI') || 'mongodb://localhost:27017/myapp';
-    }
+  constructor(private configService: ConfigService) {}
 
-    // Auth
-    getAuthToken(): string {
-        return this.configService.get<string>('AUTH_TOKEN') || '';
-    }
+  // Persistance
+  getMongoUri(): string {
+    return this.configService.get<string>('MONGODB_URI') || 'mongodb://localhost:27017/myapp';
+  }
 
-    // Cors
-    getLocalDomain(): string {
-        return this.configService.get<string>('LOCAL_DOMAIN') || '';
-    }
-    
-    getProdDomain(): string {
-        return this.configService.get<string>('PROD_DOMAIN') || '';
-    }
+  // Auth
+  getAuthToken(): string {
+    return this.configService.get<string>('AUTH_TOKEN') || '';
+  }
+
+  // Cors
+  getLocalDomain(): string {
+    return this.configService.get<string>('LOCAL_DOMAIN') || '';
+  }
+
+  getProdDomain(): string {
+    return this.configService.get<string>('PROD_DOMAIN') || '';
+  }
+
+  // Source Mongo
+  getSourceMongoUri(): string {
+    return this.configService.get<string>('SOURCE_MONGODB_URI') || 'mongodb://localhost:27017/source';
+  }
 }

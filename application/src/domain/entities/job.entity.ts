@@ -17,13 +17,13 @@ export class JobEntity {
 constructor(props: { _id: string; name: string; status: ExportStatus; export_format: ExportFormat; collection: string; query: any; fields?: string[]; sort?: Record<string, 1 | -1>; file_url: string; created_at?: Date; updated_at?: Date; }) {
     this._id = props._id || uuidv4();
     this.name = props.name;
-    this.status = props.status;
+    this.status = props.status || ExportStatus.PENDING;
     this.export_format = props.export_format;
     this.collection = props.collection || '';
     this.query = props.query;
     this.fields = props.fields || [];
     this.sort = props.sort || {};
-    this.file_url = props.file_url;
+    this.file_url = props.file_url || '';
     this.created_at = props.created_at || new Date();
     this.updated_at = props.updated_at || new Date();
   }
