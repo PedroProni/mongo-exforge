@@ -6,7 +6,7 @@ import { DomainModule } from '@domain/domain.module';
 import { PresentationModule } from '@presentation/presentation.module';
 import { InfrastructureModule } from '@infrastructure/infrastructure.module';
 
-const modules = [ApplicationModule, EnvConfigModule, DomainModule, PresentationModule, HelperModule, InfrastructureModule]
+const modules = [ApplicationModule, EnvConfigModule, DomainModule, PresentationModule, HelperModule, InfrastructureModule];
 
 @Module({
   imports: [...modules],

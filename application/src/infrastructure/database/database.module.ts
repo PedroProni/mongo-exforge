@@ -5,8 +5,9 @@ import { EnvConfigModule } from '@common/env/env-config.module';
 import { HelperModule } from '@common/helpers/helper.module';
 import { JobPersistence } from '@infrastructure/database/persistence/job.persistence';
 import { Job, JobSchema } from '@infrastructure/database/schemas/job.schema';
+import { MongoPersistence } from './persistence/mongo.persistence';
 
-const persistences: any = [JobPersistence];
+const persistences: any = [JobPersistence, MongoPersistence];
 
 @Module({
   imports: [MongooseModule.forFeature([{ name: Job.name, schema: JobSchema }]), ConnectionModule, EnvConfigModule, HelperModule],
