@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { ExportFormat, ExportStatus } from '@domain/enums/all.enums';
-import { QueryEntity } from './complements/query.entity';
+import { QueryEntity } from '@domain/entities/complements/query.entity';
 
 export class JobEntity {
   private readonly _id: string;

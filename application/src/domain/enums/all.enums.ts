@@ -22,3 +22,8 @@ export enum QueryOperator {
   NIN = 'nin',
   EXISTS = 'exists',
 }
+
+export enum UserTier {
+  FREE = 'free',
+  PREMIUM = 'premium',
+}
