@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { ExportFormat, ExportStatus } from '@domain/enums/all.enums';
+import { QueryEntity } from './complements/query.entity';
 
 export class JobEntity {
   private readonly _id: string;
@@ -7,14 +8,14 @@ export class JobEntity {
   private status: ExportStatus;
   private export_format: ExportFormat;
   private collection: string;
-  private query: any;
+  private query: QueryEntity[];
   private fields?: string[];
   private sort?: Record<string, 1 | -1>;
   private file_url: string;
   private readonly created_at: Date;
   private readonly updated_at: Date;
 
-constructor(props: { _id: string; name: string; status: ExportStatus; export_format: ExportFormat; collection: string; query: any; fields?: string[]; sort?: Record<string, 1 | -1>; file_url: string; created_at?: Date; updated_at?: Date; }) {
+constructor(props: { _id: string; name: string; status: ExportStatus; export_format: ExportFormat; collection: string; query: QueryEntity[]; fields?: string[]; sort?: Record<string, 1 | -1>; file_url: string; created_at?: Date; updated_at?: Date; }) {
     this._id = props._id || uuidv4();
     this.name = props.name;
     this.status = props.status || ExportStatus.PENDING;
@@ -49,7 +50,7 @@ constructor(props: { _id: string; name: string; status: ExportStatus; export_for
     return this.collection;
   }
 
-  getQuery(): any {
+  getQuery(): QueryEntity[] {
     return this.query;
   }
 

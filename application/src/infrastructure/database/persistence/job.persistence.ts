@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Connection, Model } from 'mongoose';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { JobRepository } from '@domain/repositories/job.repository';
 import { Job, JobDocument } from '../schemas/job.schema';
 import { JobEntity } from '@domain/entities/job.entity';
 import { DomainJobMapper } from '@domain/mappers/job.mapper';
+import { QueryEntity } from '@domain/entities/complements/query.entity';
 
 @Injectable()
 export class JobPersistence implements JobRepository {
@@ -35,15 +36,82 @@ export class JobPersistence implements JobRepository {
     return jobs.map(DomainJobMapper.toDomain);
   }
 
-  async getSourceMongoData(job: JobEntity): Promise<any[]> {
+  async getSourceMongoData(job: JobEntity, limit = 1000): Promise<any[]> {
     const collection = this.sourceConnection.collection(job.getCollection());
-    const query = JSON.parse(job.getQuery().replace(/([a-zA-Z0-9_]+)\s*=/g, '"$1":').replace(/'/g, '"'));
-    const projection = job.getFields().length ? job.getFields().reduce((acc, field) => ({ ...acc, [field]: 1 }), {}) : undefined;
-    const sort = job.getSort() || {};
-    const cursor = collection.find(query, { projection }).sort(sort);
-    const data = await cursor.toArray();
 
-    return data;
+    let projection: Record<string, number> | undefined;
+    const query = this.buildMongoQuery(job.getQuery());
+    const fields = job.getFields();
+
+    if (fields.length) {
+      projection = fields.reduce((acc, field) => ({ ...acc, [field]: 1 }), {});
+      projection._id = 0;
+    }
+
+    const sort = job.getSort() || { updated_at: -1 };
+
+    const results: any[] = [];
+    let page = 0;
+
+    while (true) {
+      const batch = await collection
+        .find(query, { projection })
+        .sort(sort)
+        .skip(page * limit)
+        .limit(limit)
+        .toArray();
+      if (!batch.length) break;
+
+      results.push(...batch);
+      page++;
+    }
+
+    if (!results.length) {
+      throw new NotFoundException(`No data found for this query: ${JSON.stringify(query)}`);
+    }
+
+    return results;
   }
+
   // Auxiliary methods
+  private buildMongoQuery(queries: QueryEntity[]): Record<string, any> {
+    const mongo_query: Record<string, any> = {};
+    queries.forEach(query => {
+      const field = query.getField();
+      const operator = query.getOperator();
+      const value = query.getValue();
+
+      if (!field || !operator) return;
+
+      switch (operator) {
+        case 'eq':
+          mongo_query[field] = value;
+          break;
+        case 'ne':
+          mongo_query[field] = { $ne: value };
+          break;
+        case 'gt':
+          mongo_query[field] = { $gt: value };
+          break;
+        case 'gte':
+          mongo_query[field] = { $gte: value };
+          break;
+        case 'lt':
+          mongo_query[field] = { $lt: value };
+          break;
+        case 'lte':
+          mongo_query[field] = { $lte: value };
+          break;
+        case 'in':
+          mongo_query[field] = { $in: value };
+          break;
+        case 'nin':
+          mongo_query[field] = { $nin: value };
+          break;
+        default:
+          throw new Error(`Unsupported operator: ${operator}`);
+      }
+    });
+    return mongo_query;
+  }
 }

@@ -3,11 +3,11 @@ import { MongoClient } from 'mongodb';
 import { MongoEntity } from '@domain/entities/mongo.entity';
 import { MongoRepository } from '@domain/repositories/mongo.repository';
 import { DomainMongoMapper } from '@domain/mappers/mongo.mapper';
-import { RedisService } from '@infrastructure/services/redis.service';
+// import { RedisService } from '@infrastructure/services/redis.service';
 
 @Injectable()
 export class MongoPersistence implements MongoRepository {
-  constructor(private readonly redisService: RedisService) {}
+  // constructor(private readonly redisService: RedisService) {}
 
   // Main methods
   async getInfo(uris: string[]): Promise<MongoEntity> {

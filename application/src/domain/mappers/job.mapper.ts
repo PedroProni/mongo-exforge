@@ -1,4 +1,5 @@
 import { JobEntity } from '@domain/entities/job.entity';
+import { DomainQueryMapper } from './complements/query.mapper';
 
 export class DomainJobMapper {
   static toPersistence(entity: JobEntity): any {
@@ -8,7 +9,7 @@ export class DomainJobMapper {
       status: entity.getStatus(),
       export_format: entity.getExportFormat(),
       collection: entity.getCollection(),
-      query: entity.getQuery(),
+      query: entity.getQuery().map(DomainQueryMapper.toPersistence),
       fields: entity.getFields(),
       sort: entity.getSort(),
       file_url: entity.getFileUrl(),
@@ -24,7 +25,7 @@ export class DomainJobMapper {
       status: raw.status,
       export_format: raw.export_format,
       collection: raw.collection,
-      query: raw.query,
+      query: raw.query.map(DomainQueryMapper.toDomain),
       fields: raw.fields || [],
       sort: raw.sort || {},
       file_url: raw.file_url,
