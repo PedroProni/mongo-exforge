@@ -17,7 +17,7 @@ export class CreateJobUseCase {
     const job = ApplicationJobMapper.toEntity(command);
     const data = await this.jobRepository.getSourceMongoData(job);
     let url: string | undefined = undefined;
-    if (data.length > 0) url = await this.exportService.generateExportFile(data, command.export_format);
+    if (data.length > 0) url = await this.exportService.generateExportFile(data, command.export_format, command.name);
     return this.jobRepository.create(job, url);
   }
 }

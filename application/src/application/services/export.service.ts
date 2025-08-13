@@ -26,7 +26,7 @@ export class ExportService {
     }
   }
 
-  async generateExportFile<T extends object>(data: T[], format: ExportFormat): Promise<string> {
+  async generateExportFile<T extends object>(data: T[], format: ExportFormat, name: string): Promise<string> {
     let buffer: Buffer;
 
     switch (format) {
@@ -44,16 +44,14 @@ export class ExportService {
         throw new Error(`Unsupported format: ${format}`);
     }
 
-    const filename = `${randomUUID()}.${format}`;
+    const filename = `${name}-${randomUUID()}.${format}`;
     const filepath = join(this.export_dir, filename);
 
     await fs.writeFile(filepath, buffer);
-    this.logger.log(`Export file written: ${filename}`);
 
     setTimeout(async () => {
       try {
         await fs.unlink(filepath);
-        this.logger.log(`Deleted expired export file: ${filename}`);
       } catch {
         this.logger.error(`Failed to delete expired export file: ${filename}`);
       }
