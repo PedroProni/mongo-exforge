@@ -7,6 +7,6 @@ export class SelectURIsUseCase {
   constructor(@Inject(MONGO_INJECT_TOKEN) private readonly mongoRepository: MongoRepository) {}
 
   async execute(uris: string[]): Promise<void> {
-    await this.mongoRepository.getInfo(uris);
+    console.log(await this.mongoRepository.getInfo(uris));
   }
 }

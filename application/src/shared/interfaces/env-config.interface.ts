@@ -4,6 +4,8 @@ interface IEnvConfig {
   getProdDomain(): string;
   getLocalDomain(): string;
   getSourceMongoUri(): string;
+  getRedisHost(): string;
+  getRedisPort(): number;
 }
 
 export { IEnvConfig };

@@ -29,4 +29,13 @@ export class EnvConfigService implements IEnvConfig {
   getSourceMongoUri(): string {
     return this.configService.get<string>('SOURCE_MONGODB_URI') || 'mongodb://localhost:27017/source';
   }
+
+  // Redis
+  getRedisHost(): string {
+    return this.configService.get<string>('REDIS_HOST') || '127.0.0.1';
+  }
+
+  getRedisPort(): number {
+    return this.configService.get<number>('REDIS_PORT') || 6379;
+  }
 }

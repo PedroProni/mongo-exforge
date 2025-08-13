@@ -7,10 +7,11 @@ import { DatabaseModule } from '@infrastructure/database/database.module';
 import { HelperModule } from '@common/helpers/helper.module';
 import { CorsService } from '@infrastructure/http-security/services/cors.service';
 import { MongoConnection } from '@infrastructure/integrations/mongo-integration';
+import { RedisService } from '@infrastructure/services/redis.service';
 
 @Module({
   imports: [HttpModule, HttpSecurityModule, HealthModule, EnvConfigModule, DatabaseModule, HelperModule],
-  providers: [CorsService, MongoConnection],
+  providers: [CorsService, MongoConnection, RedisService],
   exports: [HttpSecurityModule, HealthModule, DatabaseModule],
 })
 export class InfrastructureModule {}
