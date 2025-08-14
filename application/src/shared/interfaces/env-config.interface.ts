@@ -1,6 +1,7 @@
 interface IEnvConfig {
   getMongoUri(): string;
   getAuthToken(): string;
+  getJwtSecret(): string;
   getProdDomain(): string;
   getLocalDomain(): string;
   getSourceMongoUri(): string;

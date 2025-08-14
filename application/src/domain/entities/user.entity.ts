@@ -54,4 +54,33 @@ export class UserEntity {
   getUpdatedAt(): Date {
     return this.updated_at;
   }
+
+  // Setters
+  setTier(tier: UserTier): void {
+    this.tier = tier;
+  }
+
+  setName(name: string): void {
+    this.name = name;
+  }
+
+  setSurname(surname: string): void {
+    this.surname = surname;
+  }
+
+  setEmail(email: string): void {
+    this.email = email;
+  }
+
+  setPassword(password: string): void {
+    this.password = password;
+  }
+
+  setCreatedAt(created_at: Date): void {
+    this.created_at = created_at;
+  }
+
+  setUpdatedAt(updated_at: Date): void {
+    this.updated_at = updated_at;
+  }
 }
