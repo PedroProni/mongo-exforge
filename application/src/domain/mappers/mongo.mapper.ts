@@ -4,6 +4,8 @@ import { DomainCollectionMapper } from '@domain/mappers/complements/collection.m
 export class DomainMongoMapper {
   static toPersistence(entity: MongoEntity): any {
     return {
+      user_id: entity.getUserId(),
+      remember_me: entity.getRememberMe(),
       uris: entity.getUris(),
       collections: entity.getCollections().map(DomainCollectionMapper.toPersistence),
     };
@@ -11,6 +13,8 @@ export class DomainMongoMapper {
 
   static toDomain(raw: any): MongoEntity {
     return new MongoEntity({
+      user_id: raw.user_id,
+      remember_me: raw.remember_me,
       uris: raw.uris,
       collections: raw.collections.map(DomainCollectionMapper.toDomain),
     });

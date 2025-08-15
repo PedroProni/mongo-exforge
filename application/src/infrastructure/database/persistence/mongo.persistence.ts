@@ -10,11 +10,14 @@ export class MongoPersistence implements MongoRepository {
   // constructor(private readonly redisService: RedisService) {}
 
   // Main methods
-  async getInfo(uris: string[]): Promise<MongoEntity> {
-    let mongo: { uris: string[]; collections: any[] } = {
+  async getInfo(uris: string[], remember_me: boolean, user_id: string): Promise<MongoEntity> {
+    let mongo: { user_id: string; uris: string[]; collections: any[] } = {
+      user_id: user_id,
       uris: uris,
       collections: [],
     };
+
+    console.log(remember_me)
 
     for (const uri of uris) {
       const temp_client = new MongoClient(uri);
@@ -47,7 +50,6 @@ export class MongoPersistence implements MongoRepository {
         await temp_client.close();
       }
     }
-
     return DomainMongoMapper.toDomain(mongo);
   }
 

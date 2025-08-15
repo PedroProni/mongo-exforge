@@ -18,6 +18,9 @@ export class EnvConfigService implements IEnvConfig {
   getJwtSecret(): string {
     return this.configService.get<string>('JWT_SECRET') || '';
   }
+  getEncryptionSecret(): string {
+    return this.configService.get<string>('ENCRYPTION_SECRET') || '';
+  }
 
   // Cors
   getLocalDomain(): string {

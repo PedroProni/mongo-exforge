@@ -2,7 +2,7 @@ services:
   mongo-exforge:
     build:
       context: ./application
-    container_name: mongo-exforgee
+    container_name: mongo-exforge
     ports:
       - "3000:3000"
     env_file:

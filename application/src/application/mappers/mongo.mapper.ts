@@ -5,11 +5,13 @@ import { ApplicationCollectionMapper } from '@application/mappers/complements/co
 
 export class ApplicationMongoMapper {
   static toSelectURIsCommand(dto: SelectedURIsDto): SelectURIsCommand {
-    return new SelectURIsCommand(dto.uris);
+    return new SelectURIsCommand(dto.remember_me, dto.uris);
   }
 
   static toEntity(command: any): MongoEntity {
     return new MongoEntity({
+      user_id: command.user_id,
+      remember_me: command.remember_me,
       uris: command.uris,
       collections: command.collections.map((col: any) => ApplicationCollectionMapper.toEntity(col)),
     });

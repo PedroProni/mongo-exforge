@@ -1,3 +1,6 @@
 export class SelectURIsCommand {
-  constructor(public readonly uris: string[]) {}
+  constructor(
+    public readonly remember_me: boolean,
+    public readonly uris: string[],
+  ) {}
 }

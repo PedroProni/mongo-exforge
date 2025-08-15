@@ -5,7 +5,7 @@ import { JobPersistence } from '@infrastructure/database/persistence/job.persist
 import { MongoPersistence } from '@infrastructure/database/persistence/mongo.persistence';
 import { UserPersistence } from '@infrastructure/database/persistence/user.persistence';
 
-const tokens: any = [JOB_INJECT_TOKEN, MONGO_INJECT_TOKEN];
+const tokens: any = [JOB_INJECT_TOKEN, MONGO_INJECT_TOKEN, USER_INJECT_TOKEN];
 
 @Module({
   imports: [InfrastructureModule],

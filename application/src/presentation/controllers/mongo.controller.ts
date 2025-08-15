@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, Headers, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApplicationMongoMapper } from '@application/mappers/mongo.mapper';
 import { SelectedURIsDto } from '@shared/dtos/export-all.dto';
@@ -12,8 +12,8 @@ export class MongoController {
   @Post()
   @ApiOperation({ summary: 'Create a new job' })
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() selectedURIsDto: SelectedURIsDto) {
+  async create(@Headers('user-token') user_token: string, @Body() selectedURIsDto: SelectedURIsDto) {
     const command = ApplicationMongoMapper.toSelectURIsCommand(selectedURIsDto);
-    return await this.selectURIsUseCase.execute(command.uris);
+    return await this.selectURIsUseCase.execute(command, user_token);
   }
 }

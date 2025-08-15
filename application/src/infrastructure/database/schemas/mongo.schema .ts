@@ -7,6 +7,9 @@ export type MongoDocument = Mongo & Document;
 @Schema({ timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }, versionKey: false, collection: 'mongo' })
 export class Mongo {
   @Prop({ required: true })
+  user_id!: string;
+
+  @Prop({ required: true })
   uris!: string[];
 
   @Prop({ required: true })
