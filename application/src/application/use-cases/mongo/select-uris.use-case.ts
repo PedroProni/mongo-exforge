@@ -3,8 +3,8 @@ import { JwtService } from '@nestjs/jwt';
 import { MONGO_INJECT_TOKEN } from '@domain/tokens/inject.token';
 import { MongoRepository } from '@domain/repositories/mongo.repository';
 import { EncryptionService } from '@application/services/encryption.service';
-import { MongoEntity } from '@domain/entities/mongo.entity';
 import { SelectURIsCommand } from '@application/commands/export-all.commands';
+import { IConnectionInfo } from '@shared/interfaces/example.interface';
 
 @Injectable()
 export class SelectURIsUseCase {
@@ -16,13 +16,14 @@ export class SelectURIsUseCase {
     private readonly encryptionService: EncryptionService,
   ) {}
 
-  async execute(command: SelectURIsCommand, token: string): Promise<MongoEntity> {
+  async execute(command: SelectURIsCommand, token: string): Promise<IConnectionInfo> {
     try {
       const { id } = this.jwtService.verify(token);
-      const info = await this.mongoRepository.getInfo(command.uris, command.remember_me, id);
-      const raw_uris = info.getUris();
+      if (command.remember_me) command.uris.map(async uri => await this.mongoRepository.create(id, uri, this.encryptionService.encrypt(uri)));
+      const info = await this.mongoRepository.getInfo(command.uris, id);
+      const raw_uris = info.uris;
       const encrypted_uris = raw_uris.map(uri => this.encryptionService.encrypt(uri));
-      info.setUris(encrypted_uris);
+      info.uris = encrypted_uris;
       return info;
     } catch (error: any) {
       this.logger.error(error);

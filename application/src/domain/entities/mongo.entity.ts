@@ -3,13 +3,13 @@ import { CollectionEntity } from '@domain/entities/complements/collection.entity
 export class MongoEntity {
   private user_id: string;
   private remember_me: boolean;
-  private uris: string[];
+  private uri: string;
   private collections: CollectionEntity[];
 
-  constructor(props: { user_id: string; remember_me: boolean; uris: string[]; collections: CollectionEntity[] }) {
+  constructor(props: { user_id: string; remember_me: boolean; uri: string; collections: CollectionEntity[] }) {
     this.user_id = props.user_id;
     this.remember_me = props.remember_me;
-    this.uris = props.uris;
+    this.uri = props.uri;
     this.collections = props.collections;
   }
 
@@ -22,8 +22,8 @@ export class MongoEntity {
     return this.remember_me;
   }
 
-  public getUris(): string[] {
-    return this.uris;
+  public getUri(): string {
+    return this.uri;
   }
 
   public getCollections(): CollectionEntity[] {
@@ -31,8 +31,8 @@ export class MongoEntity {
   }
 
   // Setters
-  public setUris(uris: string[]): void {
-    this.uris = uris;
+  public setUri(uri: string): void {
+    this.uri = uri;
   }
 
   public setCollections(collections: CollectionEntity[]): void {

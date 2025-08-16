@@ -1,6 +1,6 @@
-import { UserTier } from '@domain/enums/all.enums';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { UserTier } from '@domain/enums/all.enums';
 
 export type UserDocument = User & Document;
 

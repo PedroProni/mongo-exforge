@@ -1,5 +1,7 @@
 import { MongoEntity } from '@domain/entities/mongo.entity';
+import { IConnectionInfo } from '@shared/interfaces/example.interface';
 
 export interface MongoRepository {
-  getInfo(uris: string[], remember_me: boolean, user_id: string): Promise<MongoEntity>;
+  create(user_id: string, uri: string, encrypted_uri: string): Promise<MongoEntity>;
+  getInfo(uris: string[], user_id: string): Promise<IConnectionInfo>;
 }

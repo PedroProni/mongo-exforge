@@ -1,23 +1,69 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Model } from 'mongoose';
 import { MongoClient } from 'mongodb';
-import { MongoEntity } from '@domain/entities/mongo.entity';
 import { MongoRepository } from '@domain/repositories/mongo.repository';
+import { Mongo, MongoDocument } from '@infrastructure/database/schemas/mongo.schema';
+import { InjectModel } from '@nestjs/mongoose';
+import { RedisService } from '@infrastructure/services/redis.service';
+import { IConnectionInfo } from '@shared/interfaces/example.interface';
+import { MongoEntity } from '@domain/entities/mongo.entity';
 import { DomainMongoMapper } from '@domain/mappers/mongo.mapper';
-// import { RedisService } from '@infrastructure/services/redis.service';
 
 @Injectable()
 export class MongoPersistence implements MongoRepository {
-  // constructor(private readonly redisService: RedisService) {}
+  constructor(
+    @InjectModel(Mongo.name) private readonly mongoModel: Model<MongoDocument>,
+    private readonly redisService: RedisService,
+  ) {}
 
   // Main methods
-  async getInfo(uris: string[], remember_me: boolean, user_id: string): Promise<MongoEntity> {
-    let mongo: { user_id: string; uris: string[]; collections: any[] } = {
+  async create(user_id: string, uri: string, encrypted_uri: string): Promise<MongoEntity> {
+    const temp_client = new MongoClient(uri);
+
+    let mongo: { user_id: string; uri: string; collections: any[] } = {
+      user_id: user_id,
+      uri: encrypted_uri,
+      collections: [],
+    };
+
+    try {
+      await temp_client.connect();
+
+      const db = temp_client.db();
+      const collections = await db.listCollections().toArray();
+
+      for (const c of collections) {
+        const collection = db.collection(c.name);
+
+        const sample_docs = await collection.aggregate([{ $sample: { size: 10 } }]).toArray();
+        const fields = new Set<string>();
+
+        sample_docs.forEach(doc => {
+          Object.keys(doc).forEach(key => fields.add(key));
+        });
+
+        mongo.collections.push({
+          db_name: db.databaseName,
+          collection_name: c.name,
+          collection_fields: Array.from(fields),
+        });
+      }
+      
+      await this.mongoModel.create(mongo);
+      return DomainMongoMapper.toDomain(mongo);
+    } catch (e: any) {
+      throw new InternalServerErrorException(`Error fetching MongoDB info: ${e.message}`);
+    } finally {
+      await temp_client.close();
+    }
+  }
+
+  async getInfo(uris: string[], user_id: string): Promise<IConnectionInfo> {
+    const info: IConnectionInfo = {
       user_id: user_id,
       uris: uris,
       collections: [],
     };
-
-    console.log(remember_me)
 
     for (const uri of uris) {
       const temp_client = new MongoClient(uri);
@@ -38,7 +84,7 @@ export class MongoPersistence implements MongoRepository {
             Object.keys(doc).forEach(key => fields.add(key));
           });
 
-          mongo.collections.push({
+          info.collections.push({
             db_name: db.databaseName,
             collection_name: c.name,
             collection_fields: Array.from(fields),
@@ -50,7 +96,9 @@ export class MongoPersistence implements MongoRepository {
         await temp_client.close();
       }
     }
-    return DomainMongoMapper.toDomain(mongo);
+
+    await this.redisService.set(`mongo_info_${user_id}`, info, 24 * 60 * 60 * 1000);
+    return info;
   }
 
   // Auxiliary methods

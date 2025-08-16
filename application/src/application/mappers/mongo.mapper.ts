@@ -12,7 +12,7 @@ export class ApplicationMongoMapper {
     return new MongoEntity({
       user_id: command.user_id,
       remember_me: command.remember_me,
-      uris: command.uris,
+      uri: command.uri,
       collections: command.collections.map((col: any) => ApplicationCollectionMapper.toEntity(col)),
     });
   }

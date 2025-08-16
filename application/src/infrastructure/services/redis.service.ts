@@ -19,12 +19,12 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     this.client.quit();
   }
 
-  async set(key: string, value: any, ttlSeconds?: number) {
-    const stringValue = JSON.stringify(value);
-    if (ttlSeconds) {
-      await this.client.set(key, stringValue, 'EX', ttlSeconds);
+  async set(key: string, value: any, ttl_seconds?: number) {
+    const string_value = JSON.stringify(value);
+    if (ttl_seconds) {
+      await this.client.set(key, string_value, 'EX', ttl_seconds);
     } else {
-      await this.client.set(key, stringValue);
+      await this.client.set(key, string_value);
     }
   }
 

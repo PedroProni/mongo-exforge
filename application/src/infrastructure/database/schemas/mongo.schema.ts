@@ -10,7 +10,7 @@ export class Mongo {
   user_id!: string;
 
   @Prop({ required: true })
-  uris!: string[];
+  uri!: string;
 
   @Prop({ required: true })
   collections!: Collection[];

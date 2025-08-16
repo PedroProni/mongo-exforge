@@ -1,6 +1,6 @@
-import { ExportFormat, ExportStatus } from '@domain/enums/all.enums';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { ExportFormat, ExportStatus } from '@domain/enums/all.enums';
 
 export type JobDocument = Job & Document;
 
