@@ -12,6 +12,5 @@ export class QueryDto {
   readonly operator!: QueryOperator;
 
   @ApiProperty({ description: 'Value to compare against' })
-  @IsString()
-  readonly value!: string;
+  readonly value!: any;
 }
