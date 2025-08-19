@@ -4,10 +4,11 @@ import { QueryEntity } from '@domain/entities/complements/query.entity';
 
 export class JobEntity {
   private readonly _id: string;
+  private user_id: string;
   private name: string;
   private status: ExportStatus;
   private export_format: ExportFormat;
-  private collection: string;
+  private join_field: string;
   private query: QueryEntity[];
   private fields?: string[];
   private sort?: Record<string, 1 | -1>;
@@ -15,12 +16,13 @@ export class JobEntity {
   private readonly created_at: Date;
   private readonly updated_at: Date;
 
-constructor(props: { _id: string; name: string; status: ExportStatus; export_format: ExportFormat; collection: string; query: QueryEntity[]; fields?: string[]; sort?: Record<string, 1 | -1>; file_url: string; created_at?: Date; updated_at?: Date; }) {
+  constructor(props: { _id: string; user_id: string; name: string; status: ExportStatus; export_format: ExportFormat; join_field: string; query: QueryEntity[]; fields?: string[]; sort?: Record<string, 1 | -1>; file_url: string; created_at?: Date; updated_at?: Date; }) {
     this._id = props._id || uuidv4();
+    this.user_id = props.user_id;
     this.name = props.name;
     this.status = props.status || ExportStatus.PENDING;
     this.export_format = props.export_format;
-    this.collection = props.collection || '';
+    this.join_field = props.join_field || '';
     this.query = props.query;
     this.fields = props.fields || [];
     this.sort = props.sort || {};
@@ -32,6 +34,10 @@ constructor(props: { _id: string; name: string; status: ExportStatus; export_for
   // Getters
   getId(): string {
     return this._id;
+  }
+
+  getUserId(): string {
+    return this.user_id;
   }
 
   getName(): string {
@@ -46,8 +52,8 @@ constructor(props: { _id: string; name: string; status: ExportStatus; export_for
     return this.export_format;
   }
 
-  getCollection(): string {
-    return this.collection;
+  getJoinField(): string {
+    return this.join_field;
   }
 
   getQuery(): QueryEntity[] {

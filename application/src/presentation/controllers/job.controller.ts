@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CreateJobUseCase } from '@application/use-cases/job/create-job.use-case';
 import { FindJobsUseCase } from '@application/use-cases/job/find-jobs.use.case';
@@ -16,15 +16,15 @@ export class JobController {
   @Post()
   @ApiOperation({ summary: 'Create a new job' })
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() createJobDto: CreateJobDto) {
+  async create(@Headers('user-token') user_token: string, @Body() createJobDto: CreateJobDto) {
     const command = ApplicationJobMapper.toCreateJobCommand(createJobDto);
-    return await this.createJobUseCase.execute(command);
+    return await this.createJobUseCase.execute(command, user_token);
   }
 
   @Get()
   @ApiOperation({ summary: 'Get jobs with pagination' })
   @HttpCode(HttpStatus.OK)
-  async find(@Query('page') page: number = 1, @Query('limit') limit: number = 10, @Query('id') id?: string) {
-    return await this.findJobsUseCase.execute(page, limit, id);
+  async find(@Headers('user-token') user_token: string, @Query('page') page: number = 1, @Query('limit') limit: number = 10, @Query('id') id?: string) {
+    return await this.findJobsUseCase.execute(page, limit, user_token, id);
   }
 }

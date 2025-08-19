@@ -8,12 +8,13 @@ export class MongoConnection {
 
   constructor(private databaseName: string) {}
 
-  async connect(connection_string: string): Promise<void> {
+  async connect(connection_string: string): Promise<any> {
     try {
       this.client = new MongoClient(connection_string);
       await this.client.connect();
       this.db = this.client.db(this.databaseName);
       this.logger.log('Connected to MongoDB');
+      return this.db;
     } catch (error) {
       this.logger.error('MongoDB connection error:', error);
       throw error;

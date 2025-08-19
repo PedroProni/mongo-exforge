@@ -10,6 +10,7 @@ import { MongoPersistence } from '@infrastructure/database/persistence/mongo.per
 import { User, UserSchema } from '@infrastructure/database/schemas/user.schema';
 import { UserPersistence } from '@infrastructure/database/persistence/user.persistence';
 import { RedisService } from '@infrastructure/services/redis.service';
+import { MongoConnection } from '@infrastructure/integrations/mongo-integration';
 
 const persistences: any = [JobPersistence, MongoPersistence, UserPersistence];
 
@@ -24,7 +25,7 @@ const persistences: any = [JobPersistence, MongoPersistence, UserPersistence];
     EnvConfigModule,
     HelperModule,
   ],
-  providers: [...persistences, RedisService],
+  providers: [...persistences, RedisService, MongoConnection],
   exports: [ConnectionModule, ...persistences],
 })
 export class DatabaseModule {}

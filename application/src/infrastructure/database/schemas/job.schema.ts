@@ -10,6 +10,9 @@ export class Job {
   _id!: string;
 
   @Prop({ required: true })
+  user_id!: string;
+
+  @Prop({ required: true })
   name!: string;
 
   @Prop({ required: true, enum: ExportStatus, default: ExportStatus.PENDING, type: String })
@@ -18,8 +21,8 @@ export class Job {
   @Prop({ required: true, enum: ExportFormat, type: String })
   export_format!: ExportFormat;
 
-  @Prop({ required: true })
-  collection!: string;
+  @Prop({ default: '' })
+  join_field!: string;
 
   @Prop({ required: true, type: Object })
   query!: any;

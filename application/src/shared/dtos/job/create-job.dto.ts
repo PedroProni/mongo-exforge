@@ -1,8 +1,8 @@
 import { ExportFormat } from '@domain/enums/all.enums';
+import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsEnum, IsOptional, IsString, ValidateNested } from 'class-validator';
-import { QueryDto } from '../complements/query.dto';
-import { Type } from 'class-transformer';
+import { QueryDto } from '@shared/dtos/complements/query.dto';
 
 export class CreateJobDto {
   @ApiProperty({ description: 'Name of the job', example: 'Export Users' })
@@ -13,9 +13,9 @@ export class CreateJobDto {
   @IsEnum(ExportFormat)
   readonly export_format!: ExportFormat;
 
-  @ApiProperty({ description: 'Collection name', example: 'users' })
+  @ApiProperty({ description: 'Field to join on', example: 'user_id' })
   @IsString()
-  readonly collection!: string;
+  readonly join_field!: string;
 
   @ApiProperty({ description: 'Query to filter documents', example: [{ field: 'age', operator: 'gte', value: 18 }] })
   @ValidateNested({ each: true })

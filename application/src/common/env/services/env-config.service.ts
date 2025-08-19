@@ -33,7 +33,7 @@ export class EnvConfigService implements IEnvConfig {
 
   // Source Mongo
   getSourceMongoUri(): string {
-    return this.configService.get<string>('SOURCE_MONGODB_URI') || 'mongodb://localhost:27017/source';
+    return this.configService.get<string>('MONGODB_SOURCE_URI') || 'mongodb://localhost:27017/source';
   }
 
   // Redis

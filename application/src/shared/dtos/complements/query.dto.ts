@@ -3,6 +3,14 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsString } from 'class-validator';
 
 export class QueryDto {
+  @ApiProperty({ description: 'URI of the data source' })
+  @IsString()
+  readonly uri!: string;
+
+  @ApiProperty({ description: 'Name of the collection to query' })
+  @IsString()
+  readonly collection!: string;
+
   @ApiProperty({ description: 'Name of the field to apply the filter on' })
   @IsString()
   readonly field!: string;

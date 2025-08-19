@@ -48,7 +48,7 @@ export class MongoPersistence implements MongoRepository {
           collection_fields: Array.from(fields),
         });
       }
-      
+
       await this.mongoModel.create(mongo);
       return DomainMongoMapper.toDomain(mongo);
     } catch (e: any) {
@@ -61,6 +61,7 @@ export class MongoPersistence implements MongoRepository {
   async getInfo(uris: string[], user_id: string): Promise<IConnectionInfo> {
     const info: IConnectionInfo = {
       user_id: user_id,
+      join_fields: [],
       uris: uris,
       collections: [],
     };
@@ -96,6 +97,7 @@ export class MongoPersistence implements MongoRepository {
         await temp_client.close();
       }
     }
+    if (uris.length > 1) info.join_fields = info.collections.map(c => c.collection_fields.filter((f: any) => f !== '_id')).reduce((acc, fields) => acc.filter((f: any) => fields.includes(f)));
 
     await this.redisService.set(`mongo_info_${user_id}`, info, 24 * 60 * 60 * 1000);
     return info;
