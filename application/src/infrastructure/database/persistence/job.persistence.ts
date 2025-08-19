@@ -27,7 +27,11 @@ export class JobPersistence implements JobRepository {
     if (user_id) query.user_id = user_id;
     if (id) query._id = id;
 
-    const jobs = await this.jobModel.find(query).skip((page - 1) * limit).limit(limit).exec();
+    const jobs = await this.jobModel
+      .find(query)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .exec();
     return jobs.map(DomainJobMapper.toDomain);
   }
 
@@ -55,9 +59,14 @@ export class JobPersistence implements JobRepository {
       let page = 0;
 
       while (true) {
-        const batch = await collection.find(mongo_query, { projection }).sort(sort).skip(page * limit).limit(limit).toArray();
+        const batch = await collection
+          .find(mongo_query, { projection })
+          .sort(sort)
+          .skip(page * limit)
+          .limit(limit)
+          .toArray();
         if (!batch.length) break;
-        
+
         results.push(...batch);
         page++;
       }
@@ -72,10 +81,14 @@ export class JobPersistence implements JobRepository {
     return final_result;
   }
 
+  async jobFile(job_id: string, url: string): Promise<void> {
+    await this.jobModel.updateOne({ _id: job_id }, { $set: { file_url: url, status: 'completed' } }).exec();
+  }
+
   // Auxiliary methods
   private buildMongoQuery(queries: QueryEntity[]): Record<string, any> {
     const mongo_query: Record<string, any> = {};
-    
+
     queries.forEach(query => {
       const field = query.getField();
       const operator = query.getOperator();

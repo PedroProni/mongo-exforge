@@ -5,6 +5,7 @@ import { DomainModule } from '@domain/domain.module';
 import { ExportService } from '@application/services/export.service';
 import { EncryptionService } from '@application/services/encryption.service';
 import { EnvConfigModule } from '@common/env/env-config.module';
+import { QueueModule } from '@infrastructure/cache/queues/queue.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { EnvConfigModule } from '@common/env/env-config.module';
     }),
     DomainModule,
     EnvConfigModule,
+    QueueModule
   ],
   providers: [...use_cases, ExportService, EncryptionService],
   exports: [...use_cases],

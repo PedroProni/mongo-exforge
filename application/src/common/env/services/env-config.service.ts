@@ -44,4 +44,13 @@ export class EnvConfigService implements IEnvConfig {
   getRedisPort(): number {
     return this.configService.get<number>('REDIS_PORT') || 6379;
   }
+
+  // Basic Auth
+  getUsername(): string {
+    return this.configService.get<string>('BASIC_AUTH_USERNAME') || 'admin';
+  }
+
+  getPassword(): string {
+    return this.configService.get<string>('BASIC_AUTH_PASSWORD') || 'admin';
+  }
 }

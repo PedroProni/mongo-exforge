@@ -8,6 +8,8 @@ interface IEnvConfig {
   getSourceMongoUri(): string;
   getRedisHost(): string;
   getRedisPort(): number;
+  getUsername(): string;
+  getPassword(): string;
 }
 
 export { IEnvConfig };

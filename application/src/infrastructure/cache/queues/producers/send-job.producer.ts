@@ -4,11 +4,10 @@ import { Queue } from 'bullmq';
 
 @Injectable()
 export class SendJobProducer {
-  constructor(@InjectQueue('sended-job-queue') private readonly queue: Queue) {}
-
+  constructor(@InjectQueue('send-job') private readonly queue: Queue) {}
   async enqueue(payload: any): Promise<void> {
-    const jobOptions = {
-      jobId: String(payload.id),
+    const job_options = {
+      jobId: String(payload.jobId),
       removeOnComplete: false,
       removeOnFail: false,
       attempts: 2,
@@ -17,6 +16,6 @@ export class SendJobProducer {
       tags: ['user_id', payload.id || 'unknown'],
     };
 
-    await this.queue.add('sended-job-queue', { payload }, jobOptions);
+    await this.queue.add('send-job', { payload }, job_options);
   }
 }
