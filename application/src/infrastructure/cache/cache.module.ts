@@ -42,21 +42,7 @@ const logger = new Logger('QueueConfigModule');
         };
       },
     }),
-    BullModule.registerQueue(
-      { name: 'received-databricks-api' },
-      { name: 'failed-received-users' },
-      { name: 'sended-smartico-api' },
-      { name: 'failed-sended-users' },
-      { name: 'failed-received-requests' },
-      { name: 'bonus-request-received' },
-      { name: 'sended-bonus-request-mission' },
-      { name: 'sended-bonus-request-campaign' },
-      { name: 'sended-bonus-request-tournament' },
-      { name: 'sended-bonus-request-minigames' },
-      { name: 'sended-bonus-request-trails' },
-      { name: 'sended-bonus-request-external' },
-      { name: 'sended-bonus-request-refer-friend' },
-    ),
+    BullModule.registerQueue({ name: 'send-job' }, { name: 'failed-jobs' }),
   ],
   exports: [BullModule],
 })

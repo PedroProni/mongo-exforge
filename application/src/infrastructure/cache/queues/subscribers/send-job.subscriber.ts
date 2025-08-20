@@ -22,12 +22,11 @@ export class SendJobSubscriber extends WorkerHost {
   async process(job: Job<{ payload: any }>): Promise<void> {
     try {
       const payload = job.data.payload.command;
-  
       payload.query = payload.query.map((q: any) => ({
         ...q,
         uri: this.encryptionService.decrypt(q.uri),
       }));
-  
+
       const data = await this.jobPersistence.getSourceMongoData(DomainJobMapper.toDomain(payload));
       let url: string = '';
       if (data.length > 0) url = await this.exportService.generateExportFile(data, payload.export_format, payload.name);
