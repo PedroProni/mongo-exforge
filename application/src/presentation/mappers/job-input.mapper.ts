@@ -9,9 +9,10 @@ export class JobInputMapper {
     return {
       name: dto.name,
       export_format: dto.export_format,
-      query: dto.query.map(item => ({ uri: item.uri, collection: item.collection, field: item.field, operator: item.operator, value: item.value })),
+      query: dto.query.map(item => ({ uri: item.uri, connection_id: item.connection_id, collection: item.collection, field: item.field, operator: item.operator, value: item.value })),
       fields: dto.fields ?? [],
       sort,
+      max_rows: dto.max_rows ?? 0,
     };
   }
 }

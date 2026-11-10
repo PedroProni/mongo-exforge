@@ -12,6 +12,7 @@ import { StoragePort } from '@domain/ports/storage.port';
 import { JobRepository } from '@domain/repositories/job.repository';
 import { MongoRepository } from '@domain/repositories/mongo.repository';
 import { JOB_INJECT_TOKEN, MONGO_INJECT_TOKEN, STORAGE_INJECT_TOKEN } from '@domain/constants/inject.constant';
+import { ExportCounter } from '@domain/types/export-counter.type';
 import { ExportRow } from '@domain/types/export-row.type';
 import { SourceGroup } from '@domain/types/source-group.type';
 
@@ -35,7 +36,7 @@ export class RunExportUseCase {
 
     await this.jobRepository.markInProgress(job_id, attempt);
 
-    const counter = { rows: 0 };
+    const counter: ExportCounter = { rows: 0 };
     const iterator = this.meter(job, counter)[Symbol.asyncIterator]();
     try {
       const first = await iterator.next();
@@ -54,7 +55,7 @@ export class RunExportUseCase {
     this.logger.warn(`Export ${job_id} marked as failed`);
   }
 
-  private async upload(job: JobEntity, first: ExportRow, iterator: AsyncIterator<ExportRow>, counter: { rows: number }): Promise<void> {
+  private async upload(job: JobEntity, first: ExportRow, iterator: AsyncIterator<ExportRow>, counter: ExportCounter): Promise<void> {
     async function* chain(): AsyncGenerator<ExportRow> {
       yield first;
       for (;;) {
@@ -71,17 +72,21 @@ export class RunExportUseCase {
     } catch (error) {
       stream.on('error', () => undefined);
       stream.destroy(error as Error);
-      throw error;
+      throw counter.rejection ?? error;
     }
     await this.jobRepository.markCompleted(job.getId(), { file_key: key, rows_exported: counter.rows });
   }
 
-  private async *meter(job: JobEntity, counter: { rows: number }): AsyncGenerator<ExportRow> {
-    const max_rows = job.getExportFormat() === ExportFormat.XLSX ? Math.min(this.envConfigService.getExportMaxRows(), XLSX_MAX_ROWS) : this.envConfigService.getExportMaxRows();
+  private async *meter(job: JobEntity, counter: ExportCounter): AsyncGenerator<ExportRow> {
+    const server_cap = job.getMaxRows() > 0 ? Math.min(job.getMaxRows(), this.envConfigService.getExportMaxRows()) : this.envConfigService.getExportMaxRows();
+    const max_rows = job.getExportFormat() === ExportFormat.XLSX ? Math.min(server_cap, XLSX_MAX_ROWS) : server_cap;
     const source = this.mongoRepository.stream({ groups: this.group(job), fields: job.getFields(), sort: job.getSort() });
     for await (const row of source) {
       counter.rows++;
-      if (counter.rows > max_rows) throw new ExportRejectedError(`The export exceeds the limit of ${max_rows} rows`);
+      if (counter.rows > max_rows) {
+        counter.rejection = new ExportRejectedError(`The export exceeds the limit of ${max_rows} rows`);
+        throw counter.rejection;
+      }
       if (counter.rows % PROGRESS_FLUSH_ROWS === 0) await this.jobRepository.updateProgress(job.getId(), counter.rows);
       yield row;
     }

@@ -10,6 +10,7 @@ export type JobResponse = {
   export_format: ExportFormat;
   rows_exported: number;
   attempts: number;
+  max_rows: number;
   error: string;
   file_available: boolean;
   query: { collection: string; field: string; operator: string; value: QueryValue }[];

@@ -1,6 +1,8 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, Query, Redirect } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, Query, Redirect, UseGuards } from '@nestjs/common';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CreateJobUseCase } from '@application/use-cases/job/create-job.use-case';
+import { DeleteJobUseCase } from '@application/use-cases/job/delete-job.use-case';
 import { DownloadJobUseCase } from '@application/use-cases/job/download-job.use-case';
 import { FindJobUseCase } from '@application/use-cases/job/find-job.use-case';
 import { FindJobsUseCase } from '@application/use-cases/job/find-jobs.use-case';
@@ -23,9 +25,11 @@ export class JobController {
     private readonly findJobsUseCase: FindJobsUseCase,
     private readonly findJobUseCase: FindJobUseCase,
     private readonly downloadJobUseCase: DownloadJobUseCase,
+    private readonly deleteJobUseCase: DeleteJobUseCase,
   ) {}
 
   @Post()
+  @UseGuards(ThrottlerGuard)
   @ApiOperation({ summary: 'Create an export job' })
   @HttpCode(HttpStatus.CREATED)
   async create(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateJobDto): Promise<JobResponse> {
@@ -49,5 +53,12 @@ export class JobController {
   @ApiOperation({ summary: 'Redirect (302) to a presigned download URL that is valid for 5 minutes' })
   async download(@CurrentUser() user: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string): Promise<{ url: string; statusCode: number }> {
     return { url: await this.downloadJobUseCase.execute(user, id), statusCode: HttpStatus.FOUND };
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete a finished job and its file' })
+  async remove(@CurrentUser() user: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    await this.deleteJobUseCase.execute(user, id);
   }
 }

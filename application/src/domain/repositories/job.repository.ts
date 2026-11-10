@@ -8,6 +8,8 @@ export interface JobRepository {
   findById(id: string): Promise<JobEntity | null>;
   findOwned(user_id: string, id: string): Promise<JobEntity | null>;
   listOwned(user_id: string, request: PageRequest): Promise<Page<JobEntity>>;
+  deleteOwned(user_id: string, id: string): Promise<boolean>;
+  deleteAllOwned(user_id: string): Promise<string[]>;
   markInProgress(id: string, attempt: number): Promise<void>;
   updateProgress(id: string, rows_exported: number): Promise<void>;
   markCompleted(id: string, completion: JobCompletion): Promise<void>;

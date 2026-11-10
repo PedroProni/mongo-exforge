@@ -42,6 +42,9 @@ export class Job {
   @Prop({ type: Number, default: 0 })
   attempts!: number;
 
+  @Prop({ type: Number, default: 0 })
+  max_rows!: number;
+
   @Prop({ type: String, default: '' })
   error!: string;
 

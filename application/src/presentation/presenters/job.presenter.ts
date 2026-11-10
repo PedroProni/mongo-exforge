@@ -11,6 +11,7 @@ export class JobPresenter {
       export_format: job.getExportFormat(),
       rows_exported: job.getRowsExported(),
       attempts: job.getAttempts(),
+      max_rows: job.getMaxRows(),
       error: job.getError(),
       file_available: job.getFileKey() !== '',
       query: job.getQuery().map(item => ({ collection: item.getCollection(), field: item.getField(), operator: item.getOperator(), value: item.getValue() })),

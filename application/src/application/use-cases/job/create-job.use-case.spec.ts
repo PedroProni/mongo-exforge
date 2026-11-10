@@ -1,5 +1,7 @@
 import { BadRequestException, ServiceUnavailableException } from '@nestjs/common';
 import { CreateJobUseCase } from '@application/use-cases/job/create-job.use-case';
+import { EnvConfigService } from '@common/env/services/env-config.service';
+import { ConnectionRepository } from '@domain/repositories/connection.repository';
 import { EncryptionService } from '@application/services/encryption.service';
 import { ExportFormat } from '@domain/enums/export-format.enum';
 import { QueryOperator } from '@domain/enums/query-operator.enum';
@@ -15,16 +17,25 @@ describe('CreateJobUseCase', () => {
     query: [{ uri: 'mongodb://db.example.com/app', collection: 'people', field: 'age', operator: QueryOperator.GTE, value: 30 }],
     fields: ['name'],
     sort: { age: 1 },
+    max_rows: 0,
   };
 
-  function build(overrides: { assertAllowed?: jest.Mock; enqueue?: jest.Mock } = {}) {
+  function build(overrides: { assertAllowed?: jest.Mock; enqueue?: jest.Mock; connection_uri?: string | null } = {}) {
     const create = jest.fn().mockImplementation(async job => job);
     const markFailed = jest.fn().mockResolvedValue(undefined);
     const assertAllowed = overrides.assertAllowed ?? jest.fn().mockResolvedValue(undefined);
     const enqueue = overrides.enqueue ?? jest.fn().mockResolvedValue(undefined);
-    const encryption = { encrypt: (value: string) => `enc(${value})` } as unknown as EncryptionService;
-    const useCase = new CreateJobUseCase({ create, markFailed } as unknown as JobRepository, { assertAllowed } as unknown as MongoRepository, { enqueue }, encryption);
-    return { useCase, create, markFailed, assertAllowed, enqueue };
+    const encryption = { encrypt: (value: string) => `enc(${value})`, decrypt: (value: string) => value.replace(/^enc\(|\)$/g, '') } as unknown as EncryptionService;
+    const findOwned = jest.fn().mockResolvedValue(overrides.connection_uri ? { getUri: () => overrides.connection_uri } : null);
+    const useCase = new CreateJobUseCase(
+      { create, markFailed } as unknown as JobRepository,
+      { assertAllowed } as unknown as MongoRepository,
+      { enqueue },
+      { findOwned } as unknown as ConnectionRepository,
+      encryption,
+      { getExportMaxRows: () => 1000 } as unknown as EnvConfigService,
+    );
+    return { useCase, create, markFailed, assertAllowed, enqueue, findOwned };
   }
 
   it('stores the uri encrypted and enqueues only the job id', async () => {
@@ -53,5 +64,32 @@ describe('CreateJobUseCase', () => {
     const { useCase, markFailed } = build({ enqueue: jest.fn().mockRejectedValue(new Error('redis down')) });
     await expect(useCase.execute(user, input)).rejects.toBeInstanceOf(ServiceUnavailableException);
     expect(markFailed).toHaveBeenCalledWith(expect.any(String), 'Could not enqueue the export');
+  });
+
+  it('resolves a saved connection of the user and reuses its stored ciphertext', async () => {
+    const { useCase, create, findOwned, assertAllowed } = build({ connection_uri: 'enc(mongodb://saved.example.com/app)' });
+    await useCase.execute(user, { ...input, query: [{ connection_id: 'conn-1', collection: 'people', field: 'age', operator: QueryOperator.GTE, value: 1 }] });
+    expect(findOwned).toHaveBeenCalledWith('user-1', 'conn-1');
+    expect(create.mock.calls[0][0].getQuery()[0].uri).toBe('enc(mongodb://saved.example.com/app)');
+    expect(assertAllowed).toHaveBeenCalledWith('mongodb://saved.example.com/app');
+  });
+
+  it('refuses a connection that is not found for this user', async () => {
+    const { useCase, create } = build({ connection_uri: null });
+    await expect(useCase.execute(user, { ...input, query: [{ connection_id: 'someone-elses', collection: 'people', field: 'a', operator: QueryOperator.EQ, value: 1 }] })).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it.each([{ uri: 'mongodb://x/db', connection_id: 'c' }, {}])('requires exactly one of uri and connection_id: %j', async source => {
+    const { useCase } = build({ connection_uri: 'enc(mongodb://x/db)' });
+    await expect(useCase.execute(user, { ...input, query: [{ ...source, collection: 'people', field: 'a', operator: QueryOperator.EQ, value: 1 }] })).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('refuses a max_rows above the server cap', async () => {
+    const { useCase, create } = build();
+    await expect(useCase.execute(user, { ...input, max_rows: 1001 })).rejects.toBeInstanceOf(BadRequestException);
+    expect(create).not.toHaveBeenCalled();
   });
 });

@@ -17,6 +17,7 @@ export function buildJob(overrides: Partial<JobProps> = {}): JobEntity {
     file_key: 'exports/user-1/job-1.csv',
     rows_exported: 10,
     attempts: 1,
+    max_rows: 0,
     error: '',
     started_at: now,
     finished_at: now,

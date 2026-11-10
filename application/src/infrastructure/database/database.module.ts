@@ -3,11 +3,13 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { EnvConfigService } from '@common/env/services/env-config.service';
 import { Job, JobSchema } from '@infrastructure/database/schemas/job.schema';
 import { User, UserSchema } from '@infrastructure/database/schemas/user.schema';
+import { Connection, ConnectionSchema } from '@infrastructure/database/schemas/connection.schema';
+import { ConnectionPersistence } from '@infrastructure/database/persistence/connection.persistence';
 import { JobPersistence } from '@infrastructure/database/persistence/job.persistence';
 import { UserPersistence } from '@infrastructure/database/persistence/user.persistence';
 import { MongoSourceAdapter } from '@infrastructure/integrations/mongo-source.adapter';
 import { UriGuardService } from '@infrastructure/network/uri-guard.service';
-import { JOB_INJECT_TOKEN, MONGO_INJECT_TOKEN, USER_INJECT_TOKEN } from '@domain/constants/inject.constant';
+import { CONNECTION_INJECT_TOKEN, JOB_INJECT_TOKEN, MONGO_INJECT_TOKEN, USER_INJECT_TOKEN } from '@domain/constants/inject.constant';
 
 @Module({
   imports: [
@@ -18,17 +20,20 @@ import { JOB_INJECT_TOKEN, MONGO_INJECT_TOKEN, USER_INJECT_TOKEN } from '@domain
     MongooseModule.forFeature([
       { name: Job.name, schema: JobSchema },
       { name: User.name, schema: UserSchema },
+      { name: Connection.name, schema: ConnectionSchema },
     ]),
   ],
   providers: [
     UriGuardService,
     JobPersistence,
     UserPersistence,
+    ConnectionPersistence,
     MongoSourceAdapter,
     { provide: JOB_INJECT_TOKEN, useExisting: JobPersistence },
     { provide: USER_INJECT_TOKEN, useExisting: UserPersistence },
+    { provide: CONNECTION_INJECT_TOKEN, useExisting: ConnectionPersistence },
     { provide: MONGO_INJECT_TOKEN, useExisting: MongoSourceAdapter },
   ],
-  exports: [JOB_INJECT_TOKEN, USER_INJECT_TOKEN, MONGO_INJECT_TOKEN, MongooseModule],
+  exports: [JOB_INJECT_TOKEN, USER_INJECT_TOKEN, CONNECTION_INJECT_TOKEN, MONGO_INJECT_TOKEN, MongooseModule],
 })
 export class DatabaseModule {}

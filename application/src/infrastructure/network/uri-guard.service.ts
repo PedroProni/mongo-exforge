@@ -52,7 +52,7 @@ export class UriGuardService {
       dnsLookup(hostname, { ...options, all: true }, (error, addresses) => {
         if (error) return callback(error, '', 0);
         const list = addresses;
-        if (!this.envConfigService.allowPrivateUris() && list.some(item => this.isBlockedAddress(item.address))) {
+        if (!this.envConfigService.allowPrivateUris() && !this.isAllowListed(hostname) && list.some(item => this.isBlockedAddress(item.address))) {
           return callback(Object.assign(new Error('The MongoDB host resolves to a blocked address'), { code: 'EBLOCKED' }), '', 0);
         }
         if (options.all) return callback(null, list, 0);
@@ -80,7 +80,12 @@ export class UriGuardService {
     return host.includes(':') && isIP(host) === 0 ? host.slice(0, host.lastIndexOf(':')) : host;
   }
 
+  private isAllowListed(hostname: string): boolean {
+    return this.envConfigService.getAllowedPrivateHosts().includes(hostname.replace(/^\[|\]$/g, '').toLowerCase());
+  }
+
   private async assertHostnameAllowed(hostname: string): Promise<void> {
+    if (this.isAllowListed(hostname)) return;
     if (isIP(hostname) !== 0) {
       if (this.isBlockedAddress(hostname)) throw new Error('The MongoDB host is not allowed');
       return;

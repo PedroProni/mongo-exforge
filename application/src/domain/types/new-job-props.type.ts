@@ -9,4 +9,5 @@ export type NewJobProps = {
   query: QueryProps[];
   fields: string[];
   sort: JobSort;
+  max_rows: number;
 };

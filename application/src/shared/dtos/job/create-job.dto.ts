@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsEnum, IsOptional, IsString, Length, ValidateNested } from 'class-validator';
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsEnum, IsInt, IsOptional, IsString, Length, Min, ValidateNested } from 'class-validator';
 import { MAX_NAME_LENGTH } from '@domain/constants/auth.constant';
 import { MAX_QUERY_FILTERS, MAX_SELECTED_FIELDS } from '@domain/constants/query-validation.constant';
 import { ExportFormat } from '@domain/enums/export-format.enum';
@@ -33,6 +33,12 @@ export class CreateJobDto {
   @ArrayMaxSize(MAX_SELECTED_FIELDS)
   @IsFieldPath({ each: true })
   readonly fields?: string[];
+
+  @ApiProperty({ description: 'Maximum number of rows to export (the server cap applies when omitted)', required: false, example: 10000 })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  readonly max_rows?: number;
 
   @ApiProperty({ description: 'Sort order', type: Object, required: false, example: { created_at: SortDirection.DESC } })
   @IsOptional()

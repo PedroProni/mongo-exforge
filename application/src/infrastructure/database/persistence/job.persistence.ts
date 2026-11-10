@@ -76,6 +76,22 @@ export class JobPersistence implements JobRepository {
       .exec();
   }
 
+  async deleteOwned(user_id: string, id: string): Promise<boolean> {
+    const result = await this.jobModel.deleteOne({ _id: id, user_id }).exec();
+    return result.deletedCount > 0;
+  }
+
+  async deleteAllOwned(user_id: string): Promise<string[]> {
+    const keys = (
+      await this.jobModel
+        .find({ user_id, file_key: { $ne: '' } }, { file_key: 1 })
+        .lean<{ file_key: string }[]>()
+        .exec()
+    ).map(item => item.file_key);
+    await this.jobModel.deleteMany({ user_id }).exec();
+    return keys;
+  }
+
   async findExpired(finished_before: Date, limit: number): Promise<JobEntity[]> {
     const rows = await this.jobModel
       .find({ status: ExportStatus.COMPLETED, file_key: { $ne: '' }, finished_at: { $lt: finished_before } })

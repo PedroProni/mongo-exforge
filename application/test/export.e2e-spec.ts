@@ -378,6 +378,163 @@ describe('exports (e2e)', () => {
     });
   });
 
+  describe('connections', () => {
+    let connectionId: string;
+
+    it('saves a connection and returns the uri masked', async () => {
+      const uri = sourceUri.replace('mongodb://', 'mongodb://demo:s3cr3t@');
+      const response = await http().post('/connection').set(auth(tokenA)).send({ name: 'Sample', uri: sourceUri }).expect(201);
+      connectionId = response.body.id;
+      expect(response.body.uri_masked).toContain(SOURCE_DB);
+      const withPassword = await http().post('/connection').set(auth(tokenA)).send({ name: 'With password', uri }).expect(201);
+      expect(withPassword.body.uri_masked).toContain('demo:***@');
+      expect(JSON.stringify(withPassword.body)).not.toContain('s3cr3t');
+      await http().delete(`/connection/${withPassword.body.id}`).set(auth(tokenA)).expect(204);
+    });
+
+    it('stores the uri encrypted', async () => {
+      const stored = await mongo
+        .db(new URL(process.env.MONGODB_URI as string).pathname.slice(1))
+        .collection('connection')
+        .findOne({ _id: connectionId as never });
+      expect(stored?.uri).toMatch(/^v2:/);
+      expect(JSON.stringify(stored)).not.toContain('27017');
+    });
+
+    it('lists only the connections of the caller', async () => {
+      const mine = await http().get('/connection').set(auth(tokenA)).expect(200);
+      expect(mine.body.map((item: { id: string }) => item.id)).toContain(connectionId);
+      const theirs = await http().get('/connection').set(auth(tokenB)).expect(200);
+      expect(theirs.body.map((item: { id: string }) => item.id)).not.toContain(connectionId);
+    });
+
+    it('lists the collections of a saved connection', async () => {
+      const response = await http().get(`/connection/${connectionId}/collections`).set(auth(tokenA)).expect(200);
+      expect(JSON.stringify(response.body)).toContain('people');
+    });
+
+    it('tests a uri without saving it', async () => {
+      const ok = await http().post('/connection/test').set(auth(tokenA)).send({ uri: sourceUri }).expect(200);
+      expect(ok.body.ok).toBe(true);
+      await http().post('/connection/test').set(auth(tokenA)).send({ uri: 'http://127.0.0.1/x' }).expect(400);
+    });
+
+    it('hides a connection from another user', async () => {
+      await http().get(`/connection/${connectionId}/collections`).set(auth(tokenB)).expect(404);
+      await http().delete(`/connection/${connectionId}`).set(auth(tokenB)).expect(404);
+    });
+
+    it('exports through a saved connection', async () => {
+      const created = await http()
+        .post('/job')
+        .set(auth(tokenA))
+        .send(jobPayload({ name: 'Via connection', query: [{ connection_id: connectionId, collection: 'people', field: 'age', operator: 'gte', value: 30 }] }))
+        .expect(201);
+      const done = await waitForJob(tokenA, created.body.id);
+      expect(done.status).toBe('completed');
+      expect(done.rows_exported).toBeGreaterThan(0);
+    });
+
+    it("refuses a job that uses someone else's connection", async () => {
+      await http()
+        .post('/job')
+        .set(auth(tokenB))
+        .send(jobPayload({ query: [{ connection_id: connectionId, collection: 'people', field: 'age', operator: 'gte', value: 30 }] }))
+        .expect(400);
+    });
+
+    it('refuses a filter with both uri and connection_id', async () => {
+      await http()
+        .post('/job')
+        .set(auth(tokenA))
+        .send(jobPayload({ query: [{ uri: sourceUri, connection_id: connectionId, collection: 'people', field: 'age', operator: 'gte', value: 30 }] }))
+        .expect(400);
+    });
+
+    it('deletes a connection', async () => {
+      await http().delete(`/connection/${connectionId}`).set(auth(tokenA)).expect(204);
+      await http().delete(`/connection/${connectionId}`).set(auth(tokenA)).expect(404);
+    });
+  });
+
+  describe('max_rows', () => {
+    it('limits the rows of an export', async () => {
+      const created = await http()
+        .post('/job')
+        .set(auth(tokenA))
+        .send(jobPayload({ name: 'Capped', max_rows: 5 }))
+        .expect(201);
+      const done = await waitForJob(tokenA, created.body.id);
+      expect(created.body.max_rows).toBe(5);
+      expect(done.status).toBe('failed');
+      expect(done.error).toContain('limit');
+    });
+
+    it('rejects a non positive or fractional value', async () => {
+      await http()
+        .post('/job')
+        .set(auth(tokenA))
+        .send(jobPayload({ max_rows: 0 }))
+        .expect(400);
+      await http()
+        .post('/job')
+        .set(auth(tokenA))
+        .send(jobPayload({ max_rows: 1.5 }))
+        .expect(400);
+    });
+  });
+
+  describe('delete job', () => {
+    it('deletes a finished job and its file, never someone elses', async () => {
+      const created = await http()
+        .post('/job')
+        .set(auth(tokenA))
+        .send(jobPayload({ name: 'To delete' }))
+        .expect(201);
+      const done = await waitForJob(tokenA, created.body.id);
+      expect(done.status).toBe('completed');
+      const redirect = await http().get(`/job/${created.body.id}/download`).set(auth(tokenA)).redirects(0).expect(302);
+      await http().delete(`/job/${created.body.id}`).set(auth(tokenB)).expect(404);
+      await http().delete(`/job/${created.body.id}`).set(auth(tokenA)).expect(204);
+      expect((await fetch(redirect.headers.location)).status).toBe(404);
+      await http().get(`/job/${created.body.id}`).set(auth(tokenA)).expect(404);
+    });
+  });
+
+  describe('change password', () => {
+    it('requires the current password and then logs in with the new one', async () => {
+      const email = `pw${Date.now()}@test.dev`;
+      const token = await signUp(email);
+      await http().put('/user/me/password').set(auth(token)).send({ current_password: 'wrong-password', new_password: 'another-strong-one' }).expect(400);
+      await http().put('/user/me/password').set(auth(token)).send({ current_password: 'a-strong-password', new_password: 'another-strong-one' }).expect(204);
+      await http().post('/user/login').send({ email, password: 'a-strong-password' }).expect(401);
+      await http().post('/user/login').send({ email, password: 'another-strong-one' }).expect(200);
+    });
+
+    it('no longer accepts a password on the profile update', async () => {
+      await http().put('/user/me').set(auth(tokenA)).send({ password: 'sneaky-new-password' }).expect(400);
+    });
+  });
+
+  describe('account deletion', () => {
+    it('removes the jobs, files and connections of the user', async () => {
+      const token = await signUp(`del${Date.now()}@test.dev`);
+      const connection = await http().post('/connection').set(auth(token)).send({ name: 'Temp', uri: sourceUri }).expect(201);
+      const created = await http()
+        .post('/job')
+        .set(auth(token))
+        .send(jobPayload({ name: 'Temp job' }))
+        .expect(201);
+      await waitForJob(token, created.body.id);
+      const redirect = await http().get(`/job/${created.body.id}/download`).set(auth(token)).redirects(0).expect(302);
+      await http().delete('/user/me').set(auth(token)).expect(204);
+      const db = mongo.db(new URL(process.env.MONGODB_URI as string).pathname.slice(1));
+      expect(await db.collection('job').countDocuments({ _id: created.body.id as never })).toBe(0);
+      expect(await db.collection('connection').countDocuments({ _id: connection.body.id as never })).toBe(0);
+      expect((await fetch(redirect.headers.location)).status).toBe(404);
+    });
+  });
+
   describe('expiry sweep', () => {
     it('deletes the object, marks the job expired and answers 410 on download', async () => {
       const created = await http()

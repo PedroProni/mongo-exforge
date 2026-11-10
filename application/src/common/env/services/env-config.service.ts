@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DEFAULT_EXPORT_ATTEMPTS, DEFAULT_EXPORT_CONCURRENCY, DEFAULT_EXPORT_MAX_ROWS, DEFAULT_EXPORT_TTL_HOURS, DEFAULT_JWT_EXPIRES_IN } from '@domain/constants/env.constant';
+import { DEFAULT_JOB_RATE_LIMIT_PER_MINUTE } from '@domain/constants/env.constant';
 import { DEFAULT_PORT, DEFAULT_REDIS_HOST, DEFAULT_REDIS_PORT, DEFAULT_S3_REGION, PRODUCTION_STAGE } from '@domain/constants/env.constant';
 import { S3Config } from '@domain/types/s3-config.type';
 
@@ -71,6 +72,22 @@ export class EnvConfigService {
 
   getBasicAuthPassword(): string {
     return this.text('BASIC_AUTH_PASSWORD');
+  }
+
+  getAllowedPrivateHosts(): string[] {
+    return this.text('EXFORGE_ALLOWED_PRIVATE_HOSTS')
+      .split(',')
+      .map(host => host.trim().toLowerCase())
+      .filter(host => host.length > 0);
+  }
+
+  getJobRateLimitPerMinute(): number {
+    const parsed = Number.parseInt(this.text('JOB_RATE_LIMIT_PER_MINUTE'), 10);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : DEFAULT_JOB_RATE_LIMIT_PER_MINUTE;
+  }
+
+  trustProxy(): boolean {
+    return this.flag('TRUST_PROXY');
   }
 
   allowPrivateUris(): boolean {

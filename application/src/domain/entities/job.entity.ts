@@ -18,6 +18,7 @@ export class JobEntity {
   private readonly file_key: string;
   private readonly rows_exported: number;
   private readonly attempts: number;
+  private readonly max_rows: number;
   private readonly error: string;
   private readonly started_at: Date | null;
   private readonly finished_at: Date | null;
@@ -36,6 +37,7 @@ export class JobEntity {
     this.file_key = props.file_key;
     this.rows_exported = props.rows_exported;
     this.attempts = props.attempts;
+    this.max_rows = props.max_rows;
     this.error = props.error;
     this.started_at = props.started_at;
     this.finished_at = props.finished_at;
@@ -90,6 +92,10 @@ export class JobEntity {
 
   getSort(): JobSort {
     return this.sort;
+  }
+
+  getMaxRows(): number {
+    return this.max_rows;
   }
 
   getFileKey(): string {

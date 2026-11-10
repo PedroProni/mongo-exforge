@@ -2,8 +2,8 @@ import { promises as dns } from 'dns';
 import { UriGuardService } from '@infrastructure/network/uri-guard.service';
 import { EnvConfigService } from '@common/env/services/env-config.service';
 
-function build(allow_private: boolean): UriGuardService {
-  return new UriGuardService({ allowPrivateUris: () => allow_private } as unknown as EnvConfigService);
+function build(allow_private: boolean, allowed_hosts: string[] = []): UriGuardService {
+  return new UriGuardService({ allowPrivateUris: () => allow_private, getAllowedPrivateHosts: () => allowed_hosts } as unknown as EnvConfigService);
 }
 
 describe('UriGuardService', () => {
@@ -129,6 +129,34 @@ describe('UriGuardService', () => {
       lookup('localhost', { family: 4 }, (error, address) => {
         expect(error).toBeNull();
         expect(address).toBe('127.0.0.1');
+        done();
+      });
+    });
+  });
+
+  describe('allow-list of private hosts', () => {
+    const guard = build(false, ['sample-mongo', '127.0.0.1']);
+
+    afterEach(() => jest.restoreAllMocks());
+
+    it('lets an allow-listed literal address through', async () => {
+      await expect(guard.assertAllowed('mongodb://127.0.0.1:27017/db')).resolves.toBeUndefined();
+    });
+
+    it('lets an allow-listed hostname through even when it resolves privately', async () => {
+      jest.spyOn(dns, 'lookup').mockResolvedValue([{ address: '10.0.0.7', family: 4 }] as never);
+      await expect(guard.assertAllowed('mongodb://SAMPLE-MONGO:27017/db')).resolves.toBeUndefined();
+    });
+
+    it('still refuses every other private host', async () => {
+      await expect(guard.assertAllowed('mongodb://10.0.0.5/db')).rejects.toThrow('not allowed');
+      await expect(guard.assertAllowed('mongodb://127.0.0.1:27017,10.0.0.5:27017/db')).rejects.toThrow('not allowed');
+      await expect(guard.assertAllowed('mongodb://169.254.169.254/db')).rejects.toThrow('not allowed');
+    });
+
+    it('lets the connect-time lookup pass for the allow-listed name only', done => {
+      guard.createLookup()('localhost', { family: 4 }, error => {
+        expect(error?.message).toContain('blocked address');
         done();
       });
     });

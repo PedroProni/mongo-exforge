@@ -15,6 +15,7 @@ export type JobProps = {
   file_key: string;
   rows_exported: number;
   attempts: number;
+  max_rows: number;
   error: string;
   started_at: Date | null;
   finished_at: Date | null;

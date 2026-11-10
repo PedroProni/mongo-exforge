@@ -13,6 +13,7 @@ const defaults: Record<string, string> = {
   S3_FORCE_PATH_STYLE: 'true',
   S3_AUTO_CREATE_BUCKET: 'true',
   EXFORGE_ALLOW_PRIVATE_URIS: 'true',
+  JOB_RATE_LIMIT_PER_MINUTE: '0',
   BASIC_AUTH_USERNAME: '',
   BASIC_AUTH_PASSWORD: '',
 };

@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Post, Put } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ChangePasswordUseCase } from '@application/use-cases/user/change-password.use-case';
 import { CreateUserUseCase } from '@application/use-cases/user/create-user.use-case';
 import { DeleteMeUseCase } from '@application/use-cases/user/delete-me.use-case';
 import { GetMeUseCase } from '@application/use-cases/user/get-me.use-case';
@@ -10,6 +11,7 @@ import { Public } from '@infrastructure/auth/decorators/public.decorator';
 import { SWAGGER_BEARER_NAME } from '@infrastructure/documentation/config/swagger-constants.config';
 import { UserPresenter } from '@presentation/presenters/user.presenter';
 import { AuthenticatedUser } from '@domain/types/authenticated-user.type';
+import { ChangePasswordDto } from '@shared/dtos/user/change-password.dto';
 import { CreateUserDto } from '@shared/dtos/user/create-user.dto';
 import { LoginUserDto } from '@shared/dtos/user/login-user.dto';
 import { UpdateUserDto } from '@shared/dtos/user/update-user.dto';
@@ -24,6 +26,7 @@ export class UserController {
     private readonly getMeUseCase: GetMeUseCase,
     private readonly updateMeUseCase: UpdateMeUseCase,
     private readonly deleteMeUseCase: DeleteMeUseCase,
+    private readonly changePasswordUseCase: ChangePasswordUseCase,
   ) {}
 
   @Public()
@@ -53,6 +56,14 @@ export class UserController {
   @ApiOperation({ summary: 'Update your account' })
   async update(@CurrentUser() user: AuthenticatedUser, @Body() dto: UpdateUserDto): Promise<UserResponse> {
     return UserPresenter.toResponse(await this.updateMeUseCase.execute(user, dto));
+  }
+
+  @Put('me/password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiBearerAuth(SWAGGER_BEARER_NAME)
+  @ApiOperation({ summary: 'Change your password' })
+  async changePassword(@CurrentUser() user: AuthenticatedUser, @Body() dto: ChangePasswordDto): Promise<void> {
+    await this.changePasswordUseCase.execute(user, dto.current_password, dto.new_password);
   }
 
   @Delete('me')
