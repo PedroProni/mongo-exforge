@@ -1,12 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { IsEmail, IsString, MaxLength } from 'class-validator';
+import { MAX_PASSWORD_LENGTH } from '@domain/constants/auth.constant';
 
 export class LoginUserDto {
-  @ApiProperty({ example: 'john.doe@example.com', description: 'Email address of the user' })
-  @IsString()
+  @ApiProperty({ example: 'john.doe@example.com' })
+  @IsEmail()
+  @MaxLength(254)
   readonly email!: string;
 
-  @ApiProperty({ example: 'password123', description: 'Password for the user account' })
+  @ApiProperty({ example: 'a-strong-password' })
   @IsString()
+  @MaxLength(MAX_PASSWORD_LENGTH)
   readonly password!: string;
 }

@@ -1,18 +1,21 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
-import { ExportFormat, ExportStatus } from '@domain/enums/all.enums';
+import { HydratedDocument } from 'mongoose';
+import { ExportFormat } from '@domain/enums/export-format.enum';
+import { ExportStatus } from '@domain/enums/export-status.enum';
+import { JobSort } from '@domain/types/job-sort.type';
+import { QueryProps } from '@domain/types/query-props.type';
 
-export type JobDocument = Job & Document;
+export type JobDocument = HydratedDocument<Job>;
 
 @Schema({ timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }, versionKey: false, collection: 'job' })
 export class Job {
-  @Prop({ required: true })
+  @Prop({ required: true, type: String })
   _id!: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, type: String, index: true })
   user_id!: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, type: String })
   name!: string;
 
   @Prop({ required: true, enum: ExportStatus, default: ExportStatus.PENDING, type: String })
@@ -21,26 +24,38 @@ export class Job {
   @Prop({ required: true, enum: ExportFormat, type: String })
   export_format!: ExportFormat;
 
-  @Prop({ default: '' })
-  join_field!: string;
-
-  @Prop({ required: true, type: Object })
-  query!: any;
+  @Prop({ required: true, type: [Object] })
+  query!: QueryProps[];
 
   @Prop({ type: [String], default: [] })
-  fields?: string[];
+  fields!: string[];
 
   @Prop({ type: Object, default: {} })
-  sort?: Record<string, 1 | -1>;
+  sort!: JobSort;
 
-  @Prop({ default: '' })
-  file_url!: string;
+  @Prop({ type: String, default: '' })
+  file_key!: string;
 
-  @Prop({ type: Date, default: Date.now })
+  @Prop({ type: Number, default: 0 })
+  rows_exported!: number;
+
+  @Prop({ type: Number, default: 0 })
+  attempts!: number;
+
+  @Prop({ type: String, default: '' })
+  error!: string;
+
+  @Prop({ type: Date, default: null })
+  started_at!: Date | null;
+
+  @Prop({ type: Date, default: null })
+  finished_at!: Date | null;
+
   created_at!: Date;
 
-  @Prop({ type: Date, default: Date.now })
   updated_at!: Date;
 }
 
 export const JobSchema = SchemaFactory.createForClass(Job);
+JobSchema.index({ user_id: 1, created_at: -1 });
+JobSchema.index({ status: 1, finished_at: 1 });

@@ -1,34 +1,33 @@
-import { v4 as uuidv4 } from 'uuid';
-import { UserTier } from '@domain/enums/all.enums';
+import { randomUUID } from 'crypto';
+import { NewUserProps } from '@domain/types/new-user-props.type';
+import { UserProps } from '@domain/types/user-props.type';
 
 export class UserEntity {
   private readonly _id: string;
-  private tier: UserTier;
-  private name: string;
-  private surname: string;
-  private email: string;
-  private password: string;
-  private created_at: Date;
-  private updated_at: Date;
+  private readonly name: string;
+  private readonly surname: string;
+  private readonly email: string;
+  private readonly password: string;
+  private readonly created_at: Date;
+  private readonly updated_at: Date;
 
-  constructor(props: { _id: string; tier: UserTier; name: string; surname: string; email: string; password: string; created_at: Date; updated_at: Date }) {
-    this._id = props._id || uuidv4();
-    this.tier = props.tier || UserTier.FREE;
+  constructor(props: UserProps) {
+    this._id = props._id;
     this.name = props.name;
     this.surname = props.surname;
     this.email = props.email;
     this.password = props.password;
-    this.created_at = props.created_at || new Date();
-    this.updated_at = props.updated_at || new Date();
+    this.created_at = props.created_at;
+    this.updated_at = props.updated_at;
   }
 
-  // Getters
+  static create(props: NewUserProps): UserEntity {
+    const now = new Date();
+    return new UserEntity({ ...props, _id: randomUUID(), email: props.email.trim().toLowerCase(), created_at: now, updated_at: now });
+  }
+
   getId(): string {
     return this._id;
-  }
-
-  getTier(): UserTier {
-    return this.tier;
   }
 
   getName(): string {
@@ -53,34 +52,5 @@ export class UserEntity {
 
   getUpdatedAt(): Date {
     return this.updated_at;
-  }
-
-  // Setters
-  setTier(tier: UserTier): void {
-    this.tier = tier;
-  }
-
-  setName(name: string): void {
-    this.name = name;
-  }
-
-  setSurname(surname: string): void {
-    this.surname = surname;
-  }
-
-  setEmail(email: string): void {
-    this.email = email;
-  }
-
-  setPassword(password: string): void {
-    this.password = password;
-  }
-
-  setCreatedAt(created_at: Date): void {
-    this.created_at = created_at;
-  }
-
-  setUpdatedAt(updated_at: Date): void {
-    this.updated_at = updated_at;
   }
 }

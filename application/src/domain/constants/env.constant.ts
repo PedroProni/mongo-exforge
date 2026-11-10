@@ -1,0 +1,14 @@
+export const DEFAULT_PORT = 3000;
+export const DEFAULT_REDIS_HOST = '127.0.0.1';
+export const DEFAULT_REDIS_PORT = 6379;
+export const DEFAULT_JWT_EXPIRES_IN = '24h';
+export const DEFAULT_EXPORT_TTL_HOURS = 24;
+export const DEFAULT_EXPORT_MAX_ROWS = 1000000;
+export const DEFAULT_EXPORT_ATTEMPTS = 3;
+export const DEFAULT_EXPORT_CONCURRENCY = 2;
+export const DEFAULT_S3_REGION = 'auto';
+export const MIN_JWT_SECRET_LENGTH = 32;
+export const ENCRYPTION_SECRET_PATTERN = /^[0-9a-fA-F]{64}$/;
+export const REQUIRED_ENV_KEYS = ['MONGODB_URI', 'JWT_SECRET', 'ENCRYPTION_SECRET', 'S3_ENDPOINT', 'S3_BUCKET', 'S3_ACCESS_KEY_ID', 'S3_SECRET_ACCESS_KEY'];
+export const PRODUCTION_STAGE = 'production';
+export const EXPORT_CLEANUP_CRON = '0 * * * *';

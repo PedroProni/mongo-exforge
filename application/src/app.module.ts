@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
-import { ApplicationModule } from '@application/application.module';
 import { EnvConfigModule } from '@common/env/env-config.module';
-import { HelperModule } from '@common/helpers/helper.module';
-import { DomainModule } from '@domain/domain.module';
+import { AuthModule } from '@infrastructure/auth/auth.module';
+import { DatabaseModule } from '@infrastructure/database/database.module';
+import { HealthModule } from '@infrastructure/health/health.module';
+import { HttpSecurityModule } from '@infrastructure/http-security/http-security.module';
+import { WorkerModule } from '@infrastructure/queue/worker.module';
+import { SchedulerModule } from '@infrastructure/scheduler/scheduler.module';
 import { PresentationModule } from '@presentation/presentation.module';
-import { InfrastructureModule } from '@infrastructure/infrastructure.module';
-
-const modules = [ApplicationModule, EnvConfigModule, DomainModule, PresentationModule, HelperModule, InfrastructureModule];
 
 @Module({
-  imports: [...modules],
+  imports: [EnvConfigModule, DatabaseModule, AuthModule, HttpSecurityModule, HealthModule, WorkerModule, SchedulerModule, PresentationModule],
 })
 export class AppModule {}

@@ -4,10 +4,8 @@ import { JobController } from '@presentation/controllers/job.controller';
 import { MongoController } from '@presentation/controllers/mongo.controller';
 import { UserController } from '@presentation/controllers/user.controller';
 
-const controllers: any = [JobController, MongoController, UserController];
-
 @Module({
   imports: [ApplicationModule],
-  controllers: [...controllers],
+  controllers: [JobController, MongoController, UserController],
 })
 export class PresentationModule {}

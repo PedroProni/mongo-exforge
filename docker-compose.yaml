@@ -1,11 +1,74 @@
 services:
-  mongo-exforge:
+  mongo:
+    image: mongo:7
+    container_name: exforge-mongo
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: exforge-redis
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  minio:
+    image: chainguard/minio:latest
+    container_name: exforge-minio
+    command: ["server", "/data", "--address", ":9000"]
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:-exforgeminio}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:-exforgeminio-secret}
+    ports:
+      - "9000:9000"
+    volumes:
+      - minio-data:/data
+    restart: unless-stopped
+
+  api:
     build:
       context: ./application
-    container_name: mongo-exforge
+    container_name: exforge-api
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    env_file:
+      - path: ./application/.env
+        required: false
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      MONGODB_URI: mongodb://mongo:27017/exforge
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      S3_ENDPOINT: http://minio:9000
+      S3_PUBLIC_ENDPOINT: ${S3_PUBLIC_ENDPOINT:-http://localhost:9000}
+      S3_BUCKET: ${S3_BUCKET:-exforge-exports}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-exforgeminio}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-exforgeminio-secret}
+      S3_FORCE_PATH_STYLE: "true"
+      S3_AUTO_CREATE_BUCKET: "true"
+      EXFORGE_ALLOW_PRIVATE_URIS: "true"
     ports:
       - "3000:3000"
-    env_file:
-      - ./application/.env
-    command: node dist/main.js
     restart: unless-stopped
+
+volumes:
+  mongo-data:
+  redis-data:
+  minio-data:

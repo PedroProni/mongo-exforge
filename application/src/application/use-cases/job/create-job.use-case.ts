@@ -1,48 +1,52 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { JOB_INJECT_TOKEN } from '@domain/tokens/inject.token';
-import { JobEntity } from '@domain/entities/job.entity';
-import { JobRepository } from '@domain/repositories/job.repository';
-import { CreateJobCommand } from '@application/commands/job/create-job.command';
-import { ApplicationJobMapper } from '@application/mappers/job.mapper';
-import { SendJobProducer } from '@infrastructure/cache/queues/producers/send-job.producer';
+import { BadRequestException, Inject, Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { EncryptionService } from '@application/services/encryption.service';
+import { JobEntity } from '@domain/entities/job.entity';
+import { JobQueuePort } from '@domain/ports/job-queue.port';
+import { JobRepository } from '@domain/repositories/job.repository';
+import { MongoRepository } from '@domain/repositories/mongo.repository';
+import { JOB_INJECT_TOKEN, JOB_QUEUE_INJECT_TOKEN, MONGO_INJECT_TOKEN } from '@domain/tokens/inject.token';
+import { AuthenticatedUser } from '@domain/types/authenticated-user.type';
+import { CreateJobInput } from '@domain/types/create-job-input.type';
 
 @Injectable()
 export class CreateJobUseCase {
   constructor(
     @Inject(JOB_INJECT_TOKEN) private readonly jobRepository: JobRepository,
-    private readonly jwtService: JwtService,
-    private readonly sendJobProducer: SendJobProducer,
+    @Inject(MONGO_INJECT_TOKEN) private readonly mongoRepository: MongoRepository,
+    @Inject(JOB_QUEUE_INJECT_TOKEN) private readonly jobQueue: JobQueuePort,
     private readonly encryptionService: EncryptionService,
   ) {}
 
-  async execute(command: CreateJobCommand, user_token: string): Promise<JobEntity> {
-    const { id } = this.jwtService.verify(user_token);
-    const job = ApplicationJobMapper.toEntity(command, id);
-    const created_job = await this.jobRepository.create(job);
+  async execute(user: AuthenticatedUser, input: CreateJobInput): Promise<JobEntity> {
+    await this.assertSources(input);
 
-    await this.sendJobProducer.enqueue({
-      jobId: `${created_job.getId()}-${Date.now()}`,
-      command: {
-        _id: created_job.getId(),
-        user_id: id,
-        name: command.name,
-        status: created_job.getStatus(),
-        export_format: command.export_format,
-        join_field: command.join_field,
-        query: command.query.map((q: any) => ({
-          ...q,
-          uri: this.encryptionService.encrypt(q.uri),
-        })),
-        fields: command.fields,
-        sort: command.sort,
-      },
+    const job = JobEntity.create({
+      user_id: user.id,
+      name: input.name.trim(),
+      export_format: input.export_format,
+      query: input.query.map(item => ({ ...item, uri: this.encryptionService.encrypt(item.uri) })),
+      fields: input.fields,
+      sort: input.sort,
     });
+    await this.jobRepository.create(job);
 
-    // const data = await this.jobRepository.getSourceMongoData(job);
-    // let url: string = '';
-    // if (data.length > 0) url = await this.exportService.generateExportFile(data, command.export_format, command.name);
-    return created_job;
+    try {
+      await this.jobQueue.enqueue(job.getId());
+    } catch {
+      await this.jobRepository.markFailed(job.getId(), 'Could not enqueue the export');
+      throw new ServiceUnavailableException('Could not enqueue the export');
+    }
+    return job;
+  }
+
+  private async assertSources(input: CreateJobInput): Promise<void> {
+    const uris = Array.from(new Set(input.query.map(item => item.uri)));
+    for (const uri of uris) {
+      try {
+        await this.mongoRepository.assertAllowed(uri);
+      } catch (error) {
+        throw new BadRequestException((error as Error).message);
+      }
+    }
   }
 }

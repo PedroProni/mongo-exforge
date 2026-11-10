@@ -1,7 +1,9 @@
-import { MongoEntity } from '@domain/entities/mongo.entity';
-import { IConnectionInfo } from '@shared/interfaces/example.interface';
+import { CollectionEntity } from '@domain/entities/collection.entity';
+import { ExportRow } from '@domain/types/export-row.type';
+import { SourceStreamOptions } from '@domain/types/source-stream-options.type';
 
 export interface MongoRepository {
-  create(user_id: string, uri: string, encrypted_uri: string): Promise<MongoEntity>;
-  getInfo(uris: string[], user_id: string): Promise<IConnectionInfo>;
+  assertAllowed(uri: string): Promise<void>;
+  inspect(uri: string): Promise<CollectionEntity[]>;
+  stream(options: SourceStreamOptions): AsyncGenerator<ExportRow>;
 }
