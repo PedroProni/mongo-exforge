@@ -13,7 +13,6 @@ import { DeleteMeUseCase } from '@application/use-cases/user/delete-me.use-case'
 import { GetMeUseCase } from '@application/use-cases/user/get-me.use-case';
 import { LoginUserUseCase } from '@application/use-cases/user/login-user.use-case';
 import { UpdateMeUseCase } from '@application/use-cases/user/update-me.use-case';
-import { JwtAuthGuard } from '@infrastructure/auth/jwt-auth.guard';
 import { CorsService } from '@infrastructure/http-security/cors.service';
 import { HelmetService } from '@infrastructure/http-security/helmet.service';
 import { MongoSourceAdapter } from '@infrastructure/integrations/mongo-source.adapter';
@@ -418,7 +417,6 @@ describe('exports (e2e)', () => {
       GetMeUseCase,
       LoginUserUseCase,
       UpdateMeUseCase,
-      JwtAuthGuard,
       CorsService,
       HelmetService,
       MongoSourceAdapter,
