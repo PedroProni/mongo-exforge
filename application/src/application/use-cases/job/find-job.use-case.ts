@@ -1,7 +1,7 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { JobEntity } from '@domain/entities/job.entity';
 import { JobRepository } from '@domain/repositories/job.repository';
-import { JOB_INJECT_TOKEN } from '@domain/tokens/inject.token';
+import { JOB_INJECT_TOKEN } from '@domain/constants/inject.constant';
 import { AuthenticatedUser } from '@domain/types/authenticated-user.type';
 
 @Injectable()

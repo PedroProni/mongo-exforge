@@ -1,7 +1,7 @@
 import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
 import { CollectionEntity } from '@domain/entities/collection.entity';
 import { MongoRepository } from '@domain/repositories/mongo.repository';
-import { MONGO_INJECT_TOKEN } from '@domain/tokens/inject.token';
+import { MONGO_INJECT_TOKEN } from '@domain/constants/inject.constant';
 
 @Injectable()
 export class InspectSourcesUseCase {

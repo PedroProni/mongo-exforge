@@ -10,8 +10,7 @@ import { JobCompletion } from '@domain/types/job-completion.type';
 import { JobProps } from '@domain/types/job-props.type';
 import { Page } from '@domain/types/page.type';
 import { PageRequest } from '@domain/types/page-request.type';
-
-const MAX_ERROR_LENGTH = 500;
+import { MAX_ERROR_LENGTH } from '@domain/constants/export.constant';
 
 @Injectable()
 export class JobPersistence implements JobRepository {

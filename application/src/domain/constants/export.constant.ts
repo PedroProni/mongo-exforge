@@ -17,3 +17,7 @@ export const OBJECT_KEY_PREFIX = 'exports';
 export const DEFAULT_FILE_BASENAME = 'export';
 export const MAX_FILE_BASENAME_LENGTH = 80;
 export const XLSX_MAX_ROWS = 1048575;
+export const MAX_SHEET_TEXT_LENGTH = 32767;
+export const MAX_ERROR_LENGTH = 500;
+export const MULTIPART_PART_SIZE = 8 * 1024 * 1024;
+export const MULTIPART_QUEUE_SIZE = 2;

@@ -6,7 +6,7 @@ import { Queue } from 'bullmq';
 import { Public } from '@infrastructure/auth/decorators/public.decorator';
 import { EXPORT_QUEUE_NAME } from '@domain/constants/queue.constant';
 import { StoragePort } from '@domain/ports/storage.port';
-import { STORAGE_INJECT_TOKEN } from '@domain/tokens/inject.token';
+import { STORAGE_INJECT_TOKEN } from '@domain/constants/inject.constant';
 
 @ApiTags('Health')
 @Controller('health')

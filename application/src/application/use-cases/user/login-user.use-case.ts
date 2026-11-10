@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcrypt';
 import { BCRYPT_ROUNDS, INVALID_CREDENTIALS_MESSAGE } from '@domain/constants/auth.constant';
 import { UserRepository } from '@domain/repositories/user.repository';
-import { USER_INJECT_TOKEN } from '@domain/tokens/inject.token';
+import { USER_INJECT_TOKEN } from '@domain/constants/inject.constant';
 
 @Injectable()
 export class LoginUserUseCase {

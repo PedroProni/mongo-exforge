@@ -1,7 +1,5 @@
 import { registerDecorator, ValidationOptions } from 'class-validator';
-import { FIELD_PATH_PATTERN } from '@domain/constants/query-validation.constant';
-
-const FORBIDDEN_SEGMENT = '__proto__';
+import { FIELD_PATH_PATTERN, FORBIDDEN_SEGMENT } from '@domain/constants/query-validation.constant';
 
 export function isFieldPath(value: unknown): value is string {
   return typeof value === 'string' && FIELD_PATH_PATTERN.test(value) && !value.split('.').includes(FORBIDDEN_SEGMENT);

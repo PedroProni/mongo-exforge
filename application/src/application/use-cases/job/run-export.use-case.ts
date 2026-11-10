@@ -11,7 +11,7 @@ import { ExportStatus } from '@domain/enums/export-status.enum';
 import { StoragePort } from '@domain/ports/storage.port';
 import { JobRepository } from '@domain/repositories/job.repository';
 import { MongoRepository } from '@domain/repositories/mongo.repository';
-import { JOB_INJECT_TOKEN, MONGO_INJECT_TOKEN, STORAGE_INJECT_TOKEN } from '@domain/tokens/inject.token';
+import { JOB_INJECT_TOKEN, MONGO_INJECT_TOKEN, STORAGE_INJECT_TOKEN } from '@domain/constants/inject.constant';
 import { ExportRow } from '@domain/types/export-row.type';
 import { SourceGroup } from '@domain/types/source-group.type';
 
@@ -69,6 +69,7 @@ export class RunExportUseCase {
     try {
       await this.storage.upload({ key, body: stream, content_type: EXPORT_CONTENT_TYPES[job.getExportFormat()] });
     } catch (error) {
+      stream.on('error', () => undefined);
       stream.destroy(error as Error);
       throw error;
     }

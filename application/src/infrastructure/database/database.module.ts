@@ -7,7 +7,7 @@ import { JobPersistence } from '@infrastructure/database/persistence/job.persist
 import { UserPersistence } from '@infrastructure/database/persistence/user.persistence';
 import { MongoSourceAdapter } from '@infrastructure/integrations/mongo-source.adapter';
 import { UriGuardService } from '@infrastructure/network/uri-guard.service';
-import { JOB_INJECT_TOKEN, MONGO_INJECT_TOKEN, USER_INJECT_TOKEN } from '@domain/tokens/inject.token';
+import { JOB_INJECT_TOKEN, MONGO_INJECT_TOKEN, USER_INJECT_TOKEN } from '@domain/constants/inject.constant';
 
 @Module({
   imports: [

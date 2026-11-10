@@ -5,24 +5,13 @@ import { CURSOR_BATCH_SIZE, CURSOR_MAX_TIME_MS } from '@domain/constants/export.
 import { MONGO_CONNECT_TIMEOUT_MS, MONGO_SERVER_SELECTION_TIMEOUT_MS } from '@domain/constants/network-block.constant';
 import { COLLECTION_NAME_PATTERN, FIELD_PATH_PATTERN, INSPECT_SAMPLE_SIZE, MAX_INSPECT_COLLECTIONS, SYSTEM_COLLECTION_PREFIX } from '@domain/constants/query-validation.constant';
 import { CollectionEntity } from '@domain/entities/collection.entity';
-import { QueryOperator } from '@domain/enums/query-operator.enum';
 import { MongoRepository } from '@domain/repositories/mongo.repository';
 import { ExportRow } from '@domain/types/export-row.type';
 import { JobSort } from '@domain/types/job-sort.type';
 import { QueryProps } from '@domain/types/query-props.type';
 import { SourceStreamOptions } from '@domain/types/source-stream-options.type';
 import { ExportRejectedError } from '@application/errors/export-rejected.error';
-
-const OPERATOR_KEYS: Record<QueryOperator, string> = {
-  [QueryOperator.EQ]: '$eq',
-  [QueryOperator.NE]: '$ne',
-  [QueryOperator.GT]: '$gt',
-  [QueryOperator.GTE]: '$gte',
-  [QueryOperator.LT]: '$lt',
-  [QueryOperator.LTE]: '$lte',
-  [QueryOperator.IN]: '$in',
-  [QueryOperator.NIN]: '$nin',
-};
+import { OPERATOR_KEYS } from '@domain/constants/operator-keys.constant';
 
 @Injectable()
 export class MongoSourceAdapter implements MongoRepository {

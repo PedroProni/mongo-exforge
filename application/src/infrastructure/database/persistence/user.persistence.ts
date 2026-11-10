@@ -7,9 +7,7 @@ import { UserEntity } from '@domain/entities/user.entity';
 import { UserRepository } from '@domain/repositories/user.repository';
 import { UserChanges } from '@domain/types/user-changes.type';
 import { UserProps } from '@domain/types/user-props.type';
-
-const DUPLICATE_KEY_CODE = 11000;
-const EMAIL_TAKEN_MESSAGE = 'Email already registered';
+import { DUPLICATE_KEY_CODE, EMAIL_TAKEN_MESSAGE } from '@domain/constants/auth.constant';
 
 @Injectable()
 export class UserPersistence implements UserRepository {

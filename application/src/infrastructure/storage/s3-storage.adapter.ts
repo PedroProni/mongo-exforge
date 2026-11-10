@@ -7,9 +7,7 @@ import { StoragePort } from '@domain/ports/storage.port';
 import { DownloadLinkInput } from '@domain/types/download-link-input.type';
 import { S3Config } from '@domain/types/s3-config.type';
 import { UploadInput } from '@domain/types/upload-input.type';
-
-const MULTIPART_PART_SIZE = 8 * 1024 * 1024;
-const MULTIPART_QUEUE_SIZE = 2;
+import { MULTIPART_PART_SIZE, MULTIPART_QUEUE_SIZE } from '@domain/constants/export.constant';
 
 @Injectable()
 export class S3StorageAdapter implements StoragePort, OnModuleInit {

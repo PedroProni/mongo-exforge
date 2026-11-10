@@ -3,7 +3,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { EnvConfigService } from '@common/env/services/env-config.service';
 import { BullJobQueueAdapter } from '@infrastructure/queue/bull-job-queue.adapter';
 import { EXPORT_QUEUE_NAME } from '@domain/constants/queue.constant';
-import { JOB_QUEUE_INJECT_TOKEN } from '@domain/tokens/inject.token';
+import { JOB_QUEUE_INJECT_TOKEN } from '@domain/constants/inject.constant';
 
 @Module({
   imports: [

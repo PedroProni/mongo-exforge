@@ -1,7 +1,5 @@
-import { CSV_FORMULA_PREFIXES } from '@domain/constants/export.constant';
+import { CSV_FORMULA_PREFIXES, MAX_SHEET_TEXT_LENGTH } from '@domain/constants/export.constant';
 import { ExportRow } from '@domain/types/export-row.type';
-
-const MAX_SHEET_TEXT_LENGTH = 32767;
 
 export class CellHelper {
   static getPath(row: ExportRow, path: string): unknown {

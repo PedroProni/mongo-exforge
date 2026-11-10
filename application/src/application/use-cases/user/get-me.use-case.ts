@@ -1,7 +1,7 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { UserEntity } from '@domain/entities/user.entity';
 import { UserRepository } from '@domain/repositories/user.repository';
-import { USER_INJECT_TOKEN } from '@domain/tokens/inject.token';
+import { USER_INJECT_TOKEN } from '@domain/constants/inject.constant';
 import { AuthenticatedUser } from '@domain/types/authenticated-user.type';
 
 @Injectable()

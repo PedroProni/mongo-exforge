@@ -10,3 +10,4 @@ export const MAX_URI_LENGTH = 2048;
 export const MAX_INSPECT_URIS = 5;
 export const MAX_INSPECT_COLLECTIONS = 200;
 export const INSPECT_SAMPLE_SIZE = 10;
+export const FORBIDDEN_SEGMENT = '__proto__';

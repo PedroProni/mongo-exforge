@@ -3,7 +3,7 @@ import { DEFAULT_FILE_BASENAME, DOWNLOAD_LINK_TTL_SECONDS, MAX_FILE_BASENAME_LEN
 import { ExportStatus } from '@domain/enums/export-status.enum';
 import { StoragePort } from '@domain/ports/storage.port';
 import { JobRepository } from '@domain/repositories/job.repository';
-import { JOB_INJECT_TOKEN, STORAGE_INJECT_TOKEN } from '@domain/tokens/inject.token';
+import { JOB_INJECT_TOKEN, STORAGE_INJECT_TOKEN } from '@domain/constants/inject.constant';
 import { AuthenticatedUser } from '@domain/types/authenticated-user.type';
 
 @Injectable()

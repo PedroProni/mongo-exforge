@@ -1,11 +1,9 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { EnvConfigService } from '@common/env/services/env-config.service';
-import { EXPIRED_SWEEP_BATCH } from '@domain/constants/pagination.constant';
+import { EXPIRED_SWEEP_BATCH, MILLISECONDS_PER_HOUR } from '@domain/constants/pagination.constant';
 import { StoragePort } from '@domain/ports/storage.port';
 import { JobRepository } from '@domain/repositories/job.repository';
-import { JOB_INJECT_TOKEN, STORAGE_INJECT_TOKEN } from '@domain/tokens/inject.token';
-
-const MILLISECONDS_PER_HOUR = 60 * 60 * 1000;
+import { JOB_INJECT_TOKEN, STORAGE_INJECT_TOKEN } from '@domain/constants/inject.constant';
 
 @Injectable()
 export class CleanupExpiredExportsUseCase {

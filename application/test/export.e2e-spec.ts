@@ -3,6 +3,23 @@ import { MongoClient } from 'mongodb';
 import ExcelJS from 'exceljs';
 import request from 'supertest';
 import { CleanupExpiredExportsUseCase } from '@application/use-cases/job/cleanup-expired-exports.use-case';
+import { ExportStreamService } from '@application/services/export-stream.service';
+import { FindJobUseCase } from '@application/use-cases/job/find-job.use-case';
+import { FindJobsUseCase } from '@application/use-cases/job/find-jobs.use-case';
+import { RunExportUseCase } from '@application/use-cases/job/run-export.use-case';
+import { InspectSourcesUseCase } from '@application/use-cases/mongo/inspect-sources.use-case';
+import { CreateUserUseCase } from '@application/use-cases/user/create-user.use-case';
+import { DeleteMeUseCase } from '@application/use-cases/user/delete-me.use-case';
+import { GetMeUseCase } from '@application/use-cases/user/get-me.use-case';
+import { LoginUserUseCase } from '@application/use-cases/user/login-user.use-case';
+import { UpdateMeUseCase } from '@application/use-cases/user/update-me.use-case';
+import { JwtAuthGuard } from '@infrastructure/auth/jwt-auth.guard';
+import { CorsService } from '@infrastructure/http-security/cors.service';
+import { HelmetService } from '@infrastructure/http-security/helmet.service';
+import { MongoSourceAdapter } from '@infrastructure/integrations/mongo-source.adapter';
+import { BullJobQueueAdapter } from '@infrastructure/queue/bull-job-queue.adapter';
+import { ExportJobProcessor } from '@infrastructure/queue/export-job.processor';
+import { S3StorageAdapter } from '@infrastructure/storage/s3-storage.adapter';
 import { createApp } from './e2e-app';
 
 const SOURCE_DB = 'exforge_e2e_source';
@@ -386,6 +403,30 @@ describe('exports (e2e)', () => {
       expect(after.status).toBe('expired');
       expect(after.file_available).toBe(false);
       await http().get(`/job/${created.body.id}/download`).set(auth(tokenA)).expect(410);
+    });
+  });
+
+  describe('wiring', () => {
+    it.each([
+      ExportStreamService,
+      FindJobUseCase,
+      FindJobsUseCase,
+      RunExportUseCase,
+      InspectSourcesUseCase,
+      CreateUserUseCase,
+      DeleteMeUseCase,
+      GetMeUseCase,
+      LoginUserUseCase,
+      UpdateMeUseCase,
+      JwtAuthGuard,
+      CorsService,
+      HelmetService,
+      MongoSourceAdapter,
+      BullJobQueueAdapter,
+      ExportJobProcessor,
+      S3StorageAdapter,
+    ])('resolves %p from the container', provider => {
+      expect(app.get(provider, { strict: false })).toBeDefined();
     });
   });
 
