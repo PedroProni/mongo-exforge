@@ -69,7 +69,6 @@ export class RunExportUseCase {
     try {
       await this.storage.upload({ key, body: stream, content_type: EXPORT_CONTENT_TYPES[job.getExportFormat()] });
     } catch (error) {
-      stream.on('error', () => undefined);
       stream.destroy(error as Error);
       throw error;
     }
