@@ -24,7 +24,7 @@ export class DownloadJobUseCase {
       job
         .getName()
         .replace(/[^A-Za-z0-9._-]+/g, '_')
-        .replace(/^_+|_+$/g, '')
+        .replace(/^[._]+|[._]+$/g, '')
         .slice(0, MAX_FILE_BASENAME_LENGTH) || DEFAULT_FILE_BASENAME;
     return this.storage.createDownloadUrl({ key: job.getFileKey(), filename: `${base}.${job.getExportFormat()}`, ttl_seconds: DOWNLOAD_LINK_TTL_SECONDS });
   }

@@ -1,4 +1,4 @@
-export const COLLECTION_NAME_PATTERN = /^[A-Za-z0-9_][A-Za-z0-9_.-]{0,99}$/;
+export const COLLECTION_NAME_PATTERN = /^(?!system\.)[A-Za-z0-9_][A-Za-z0-9_.-]{0,99}$/;
 export const FIELD_PATH_PATTERN = /^[A-Za-z_][A-Za-z0-9_-]{0,63}(\.[A-Za-z0-9_-]{1,64}){0,7}$/;
 export const SYSTEM_COLLECTION_PREFIX = 'system.';
 export const MAX_QUERY_FILTERS = 20;
