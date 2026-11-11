@@ -1,148 +1,107 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Model } from 'mongoose';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { JobRepository } from '@domain/repositories/job.repository';
-import { Job, JobDocument } from '../schemas/job.schema';
+import { Model } from 'mongoose';
+import { Job, JobDocument } from '@infrastructure/database/schemas/job.schema';
+import { JobDocumentMapper } from '@infrastructure/database/mappers/job.mapper';
 import { JobEntity } from '@domain/entities/job.entity';
-import { DomainJobMapper } from '@domain/mappers/job.mapper';
-import { QueryEntity } from '@domain/entities/complements/query.entity';
-import { MongoConnection } from '@infrastructure/integrations/mongo-integration';
+import { ExportStatus } from '@domain/enums/export-status.enum';
+import { JobRepository } from '@domain/repositories/job.repository';
+import { JobCompletion } from '@domain/types/job-completion.type';
+import { JobProps } from '@domain/types/job-props.type';
+import { Page } from '@domain/types/page.type';
+import { PageRequest } from '@domain/types/page-request.type';
+import { MAX_ERROR_LENGTH } from '@domain/constants/export.constant';
 
 @Injectable()
 export class JobPersistence implements JobRepository {
-  constructor(
-    @InjectModel(Job.name) private readonly jobModel: Model<JobDocument>,
-    private readonly mongoConnection: MongoConnection,
-  ) {}
+  constructor(@InjectModel(Job.name) private readonly jobModel: Model<JobDocument>) {}
 
-  // Main methods
   async create(job: JobEntity): Promise<JobEntity> {
-    const new_job = DomainJobMapper.toPersistence(job);
-    await this.jobModel.create(new_job);
-    return DomainJobMapper.toDomain(new_job);
+    await this.jobModel.create(JobDocumentMapper.toPersistence(job));
+    return job;
   }
 
-  async find(page: number, limit: number, user_id: string, id?: string): Promise<JobEntity[]> {
-    const query: any = {};
-    if (user_id) query.user_id = user_id;
-    if (id) query._id = id;
+  async findById(id: string): Promise<JobEntity | null> {
+    const raw = await this.jobModel.findById(id).lean<JobProps>().exec();
+    return raw ? JobDocumentMapper.toDomain(raw) : null;
+  }
 
-    const jobs = await this.jobModel
-      .find(query)
-      .skip((page - 1) * limit)
-      .limit(limit)
+  async findOwned(user_id: string, id: string): Promise<JobEntity | null> {
+    const raw = await this.jobModel.findOne({ _id: id, user_id }).lean<JobProps>().exec();
+    return raw ? JobDocumentMapper.toDomain(raw) : null;
+  }
+
+  async listOwned(user_id: string, request: PageRequest): Promise<Page<JobEntity>> {
+    const [rows, total] = await Promise.all([
+      this.jobModel
+        .find({ user_id })
+        .sort({ created_at: -1 })
+        .skip((request.page - 1) * request.limit)
+        .limit(request.limit)
+        .lean<JobProps[]>()
+        .exec(),
+      this.jobModel.countDocuments({ user_id }).exec(),
+    ]);
+    return { items: rows.map(row => JobDocumentMapper.toDomain(row)), page: request.page, limit: request.limit, total };
+  }
+
+  async markInProgress(id: string, attempt: number): Promise<void> {
+    await this.jobModel
+      .updateOne(
+        { _id: id, status: { $in: [ExportStatus.PENDING, ExportStatus.IN_PROGRESS] } },
+        { $set: { status: ExportStatus.IN_PROGRESS, attempts: attempt, started_at: new Date(), finished_at: null, error: '', rows_exported: 0 } },
+      )
       .exec();
-    return jobs.map(DomainJobMapper.toDomain);
   }
 
-  async getSourceMongoData(job: JobEntity, limit = 1000): Promise<any[]> {
-    const final_result: any[] = [];
-
-    const grouped_queries = this.groupQueries(job.getQuery());
-
-    for (const { uri, collection_name, filters } of grouped_queries) {
-      const connection = await this.mongoConnection.connect(uri);
-      const collection = connection.collection(collection_name);
-
-      const mongo_query = this.buildMongoQuery(filters);
-
-      let projection: Record<string, number> | undefined;
-      const fields = job.getFields();
-      if (fields.length) {
-        projection = fields.reduce((acc, field) => ({ ...acc, [field]: 1 }), {});
-        projection._id = 0;
-      }
-
-      const sort = job.getSort() || { updated_at: -1 };
-
-      const results: any[] = [];
-      let page = 0;
-
-      while (true) {
-        const batch = await collection
-          .find(mongo_query, { projection })
-          .sort(sort)
-          .skip(page * limit)
-          .limit(limit)
-          .toArray();
-        if (!batch.length) break;
-
-        results.push(...batch);
-        page++;
-      }
-
-      if (!results.length) {
-        throw new NotFoundException(`No data found for query on collection ${collection_name}`);
-      }
-
-      final_result.push(...results);
-    }
-
-    return final_result;
+  async updateProgress(id: string, rows_exported: number): Promise<void> {
+    await this.jobModel.updateOne({ _id: id, status: ExportStatus.IN_PROGRESS }, { $set: { rows_exported } }).exec();
   }
 
-  async jobFile(job_id: string, url: string): Promise<void> {
-    await this.jobModel.updateOne({ _id: job_id }, { $set: { file_url: url, status: 'completed' } }).exec();
+  async markCompleted(id: string, completion: JobCompletion): Promise<void> {
+    await this.jobModel
+      .updateOne(
+        { _id: id, status: ExportStatus.IN_PROGRESS },
+        { $set: { status: ExportStatus.COMPLETED, file_key: completion.file_key, rows_exported: completion.rows_exported, finished_at: new Date(), error: '' } },
+      )
+      .exec();
   }
 
-  // Auxiliary methods
-  private buildMongoQuery(queries: QueryEntity[]): Record<string, any> {
-    const mongo_query: Record<string, any> = {};
-
-    queries.forEach(query => {
-      const field = query.getField();
-      const operator = query.getOperator();
-      const value = query.getValue();
-
-      if (!field || !operator) return;
-
-      switch (operator) {
-        case 'eq':
-          mongo_query[field] = value;
-          break;
-        case 'ne':
-          mongo_query[field] = { $ne: value };
-          break;
-        case 'gt':
-          mongo_query[field] = { $gt: value };
-          break;
-        case 'gte':
-          mongo_query[field] = { $gte: value };
-          break;
-        case 'lt':
-          mongo_query[field] = { $lt: value };
-          break;
-        case 'lte':
-          mongo_query[field] = { $lte: value };
-          break;
-        case 'in':
-          mongo_query[field] = { $in: value };
-          break;
-        case 'nin':
-          mongo_query[field] = { $nin: value };
-          break;
-        default:
-          throw new Error(`Unsupported operator: ${operator}`);
-      }
-    });
-    return mongo_query;
+  async markFailed(id: string, error: string): Promise<void> {
+    await this.jobModel
+      .updateOne(
+        { _id: id, status: { $in: [ExportStatus.PENDING, ExportStatus.IN_PROGRESS] } },
+        { $set: { status: ExportStatus.FAILED, error: error.slice(0, MAX_ERROR_LENGTH), finished_at: new Date() } },
+      )
+      .exec();
   }
 
-  private groupQueries(queries: QueryEntity[]): any[] {
-    const grouped: Record<string, { uri: string; collection_name: string; filters: QueryEntity[] }> = {};
+  async deleteOwned(user_id: string, id: string): Promise<boolean> {
+    const result = await this.jobModel.deleteOne({ _id: id, user_id }).exec();
+    return result.deletedCount > 0;
+  }
 
-    for (const q of queries) {
-      const key = `${q.getUri()}::${q.getCollection()}`;
-      if (!grouped[key]) {
-        grouped[key] = {
-          uri: q.getUri(),
-          collection_name: q.getCollection(),
-          filters: [],
-        };
-      }
-      grouped[key].filters.push(q);
-    }
+  async deleteAllOwned(user_id: string): Promise<string[]> {
+    const keys = (
+      await this.jobModel
+        .find({ user_id, file_key: { $ne: '' } }, { file_key: 1 })
+        .lean<{ file_key: string }[]>()
+        .exec()
+    ).map(item => item.file_key);
+    await this.jobModel.deleteMany({ user_id }).exec();
+    return keys;
+  }
 
-    return Object.values(grouped);
+  async findExpired(finished_before: Date, limit: number): Promise<JobEntity[]> {
+    const rows = await this.jobModel
+      .find({ status: ExportStatus.COMPLETED, file_key: { $ne: '' }, finished_at: { $lt: finished_before } })
+      .limit(limit)
+      .lean<JobProps[]>()
+      .exec();
+    return rows.map(row => JobDocumentMapper.toDomain(row));
+  }
+
+  async markExpired(id: string): Promise<void> {
+    await this.jobModel.updateOne({ _id: id, status: ExportStatus.COMPLETED }, { $set: { status: ExportStatus.EXPIRED, file_key: '' } }).exec();
   }
 }

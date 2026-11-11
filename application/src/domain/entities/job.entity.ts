@@ -1,37 +1,67 @@
-import { v4 as uuidv4 } from 'uuid';
-import { ExportFormat, ExportStatus } from '@domain/enums/all.enums';
-import { QueryEntity } from '@domain/entities/complements/query.entity';
+import { randomUUID } from 'crypto';
+import { QueryEntity } from '@domain/entities/query.entity';
+import { ExportFormat } from '@domain/enums/export-format.enum';
+import { ExportStatus } from '@domain/enums/export-status.enum';
+import { JobProps } from '@domain/types/job-props.type';
+import { JobSort } from '@domain/types/job-sort.type';
+import { NewJobProps } from '@domain/types/new-job-props.type';
 
 export class JobEntity {
   private readonly _id: string;
-  private user_id: string;
-  private name: string;
-  private status: ExportStatus;
-  private export_format: ExportFormat;
-  private join_field: string;
-  private query: QueryEntity[];
-  private fields?: string[];
-  private sort?: Record<string, 1 | -1>;
-  private file_url: string;
+  private readonly user_id: string;
+  private readonly name: string;
+  private readonly status: ExportStatus;
+  private readonly export_format: ExportFormat;
+  private readonly query: QueryEntity[];
+  private readonly fields: string[];
+  private readonly sort: JobSort;
+  private readonly file_key: string;
+  private readonly rows_exported: number;
+  private readonly attempts: number;
+  private readonly max_rows: number;
+  private readonly error: string;
+  private readonly started_at: Date | null;
+  private readonly finished_at: Date | null;
   private readonly created_at: Date;
   private readonly updated_at: Date;
 
-  constructor(props: { _id: string; user_id: string; name: string; status: ExportStatus; export_format: ExportFormat; join_field: string; query: QueryEntity[]; fields?: string[]; sort?: Record<string, 1 | -1>; file_url: string; created_at?: Date; updated_at?: Date; }) {
-    this._id = props._id || uuidv4();
+  constructor(props: JobProps) {
+    this._id = props._id;
     this.user_id = props.user_id;
     this.name = props.name;
-    this.status = props.status || ExportStatus.PENDING;
+    this.status = props.status;
     this.export_format = props.export_format;
-    this.join_field = props.join_field || '';
-    this.query = props.query;
-    this.fields = props.fields || [];
-    this.sort = props.sort || {};
-    this.file_url = props.file_url || '';
-    this.created_at = props.created_at || new Date();
-    this.updated_at = props.updated_at || new Date();
+    this.query = props.query.map(item => new QueryEntity(item));
+    this.fields = props.fields;
+    this.sort = props.sort;
+    this.file_key = props.file_key;
+    this.rows_exported = props.rows_exported;
+    this.attempts = props.attempts;
+    this.max_rows = props.max_rows;
+    this.error = props.error;
+    this.started_at = props.started_at;
+    this.finished_at = props.finished_at;
+    this.created_at = props.created_at;
+    this.updated_at = props.updated_at;
   }
 
-  // Getters
+  static create(props: NewJobProps): JobEntity {
+    const now = new Date();
+    return new JobEntity({
+      ...props,
+      _id: randomUUID(),
+      status: ExportStatus.PENDING,
+      file_key: '',
+      rows_exported: 0,
+      attempts: 0,
+      error: '',
+      started_at: null,
+      finished_at: null,
+      created_at: now,
+      updated_at: now,
+    });
+  }
+
   getId(): string {
     return this._id;
   }
@@ -52,24 +82,44 @@ export class JobEntity {
     return this.export_format;
   }
 
-  getJoinField(): string {
-    return this.join_field;
-  }
-
   getQuery(): QueryEntity[] {
     return this.query;
   }
 
   getFields(): string[] {
-    return this.fields || [];
+    return this.fields;
   }
 
-  getSort(): Record<string, 1 | -1> {
-    return this.sort || {};
+  getSort(): JobSort {
+    return this.sort;
   }
 
-  getFileUrl(): string {
-    return this.file_url;
+  getMaxRows(): number {
+    return this.max_rows;
+  }
+
+  getFileKey(): string {
+    return this.file_key;
+  }
+
+  getRowsExported(): number {
+    return this.rows_exported;
+  }
+
+  getAttempts(): number {
+    return this.attempts;
+  }
+
+  getError(): string {
+    return this.error;
+  }
+
+  getStartedAt(): Date | null {
+    return this.started_at;
+  }
+
+  getFinishedAt(): Date | null {
+    return this.finished_at;
   }
 
   getCreatedAt(): Date {

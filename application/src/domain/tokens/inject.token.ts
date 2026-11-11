@@ -1,3 +1,0 @@
-export const JOB_INJECT_TOKEN = Symbol('JOB_INJECT_TOKEN');
-export const MONGO_INJECT_TOKEN = Symbol('MONGO_INJECT_TOKEN');
-export const USER_INJECT_TOKEN = Symbol('USER_INJECT_TOKEN');

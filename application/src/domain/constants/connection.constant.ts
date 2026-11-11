@@ -1,0 +1,3 @@
+export const MAX_CONNECTIONS_PER_USER = 20;
+export const MAX_CONNECTION_NAME_LENGTH = 60;
+export const CONNECTION_PASSWORD_MASK = '***';

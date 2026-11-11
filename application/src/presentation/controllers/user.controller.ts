@@ -1,54 +1,76 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Post, Put } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ChangePasswordUseCase } from '@application/use-cases/user/change-password.use-case';
 import { CreateUserUseCase } from '@application/use-cases/user/create-user.use-case';
-import { FindUsersUseCase } from '@application/use-cases/user/find-users.use-case';
+import { DeleteMeUseCase } from '@application/use-cases/user/delete-me.use-case';
+import { GetMeUseCase } from '@application/use-cases/user/get-me.use-case';
 import { LoginUserUseCase } from '@application/use-cases/user/login-user.use-case';
-import { UpdateUserUseCase } from '@application/use-cases/user/update-user.use-case';
-import { DeleteUserUseCase } from '@application/use-cases/user/delete-user.use-case';
-import { CreateUserDto, LoginUserDto, UpdateUserDto } from '@shared/dtos/export-all.dto';
-import { ApplicationUserMapper } from '@application/mappers/user.mapper';
+import { UpdateMeUseCase } from '@application/use-cases/user/update-me.use-case';
+import { CurrentUser } from '@infrastructure/auth/decorators/current-user.decorator';
+import { Public } from '@infrastructure/auth/decorators/public.decorator';
+import { SWAGGER_BEARER_NAME } from '@infrastructure/documentation/config/swagger-constants.config';
+import { UserPresenter } from '@presentation/presenters/user.presenter';
+import { AuthenticatedUser } from '@domain/types/authenticated-user.type';
+import { ChangePasswordDto } from '@shared/dtos/user/change-password.dto';
+import { CreateUserDto } from '@shared/dtos/user/create-user.dto';
+import { LoginUserDto } from '@shared/dtos/user/login-user.dto';
+import { UpdateUserDto } from '@shared/dtos/user/update-user.dto';
+import { UserResponse } from '@shared/responses/user-response.type';
 
 @ApiTags('User')
 @Controller('user')
 export class UserController {
   constructor(
     private readonly createUserUseCase: CreateUserUseCase,
-    private readonly findUsersUseCase: FindUsersUseCase,
-    private readonly updateUserUseCase: UpdateUserUseCase,
-    private readonly deleteUserUseCase: DeleteUserUseCase,
     private readonly loginUserUseCase: LoginUserUseCase,
+    private readonly getMeUseCase: GetMeUseCase,
+    private readonly updateMeUseCase: UpdateMeUseCase,
+    private readonly deleteMeUseCase: DeleteMeUseCase,
+    private readonly changePasswordUseCase: ChangePasswordUseCase,
   ) {}
 
+  @Public()
   @Post()
-  @ApiOperation({ summary: 'Create a new user' })
-  async create(@Body() createUserDto: CreateUserDto) {
-    const command = ApplicationUserMapper.toCreateUserCommand(createUserDto);
-    return this.createUserUseCase.execute(command);
+  @ApiOperation({ summary: 'Sign up and receive a bearer token' })
+  signUp(@Body() dto: CreateUserDto): Promise<{ token: string }> {
+    return this.createUserUseCase.execute({ name: dto.name, surname: dto.surname, email: dto.email, password: dto.password });
   }
 
-  @Get()
-  @ApiOperation({ summary: 'Get users using query parameters' })
-  async findAll(@Query('page') page: number, @Query('limit') limit: number, @Query('id') id: string, @Query('email') email: string) {
-    return this.findUsersUseCase.execute(page, limit, id, email);
-  }
-
-  @Put(':id')
-  @ApiOperation({ summary: 'Update an existing user' })
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    const command = ApplicationUserMapper.toUpdateUserCommand(updateUserDto, id);
-    return this.updateUserUseCase.execute(command);
-  }
-
-  @Delete(':id')
-  @ApiOperation({ summary: 'Delete a user by ID' })
-  async delete(@Param('id') id: string) {
-    return this.deleteUserUseCase.execute(id);
-  }
-
+  @Public()
   @Post('login')
-  @ApiOperation({ summary: 'Login a user' })
-  async login(@Body() loginUserDto: LoginUserDto) {
-    const command = ApplicationUserMapper.toLoginUserCommand(loginUserDto);
-    return this.loginUserUseCase.execute(command);
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Log in and receive a bearer token' })
+  login(@Body() dto: LoginUserDto): Promise<{ token: string }> {
+    return this.loginUserUseCase.execute(dto.email, dto.password);
+  }
+
+  @Get('me')
+  @ApiBearerAuth(SWAGGER_BEARER_NAME)
+  @ApiOperation({ summary: 'Get your account' })
+  async me(@CurrentUser() user: AuthenticatedUser): Promise<UserResponse> {
+    return UserPresenter.toResponse(await this.getMeUseCase.execute(user));
+  }
+
+  @Put('me')
+  @ApiBearerAuth(SWAGGER_BEARER_NAME)
+  @ApiOperation({ summary: 'Update your account' })
+  async update(@CurrentUser() user: AuthenticatedUser, @Body() dto: UpdateUserDto): Promise<UserResponse> {
+    return UserPresenter.toResponse(await this.updateMeUseCase.execute(user, dto));
+  }
+
+  @Put('me/password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiBearerAuth(SWAGGER_BEARER_NAME)
+  @ApiOperation({ summary: 'Change your password' })
+  async changePassword(@CurrentUser() user: AuthenticatedUser, @Body() dto: ChangePasswordDto): Promise<void> {
+    await this.changePasswordUseCase.execute(user, dto.current_password, dto.new_password);
+  }
+
+  @Delete('me')
+  @ApiBearerAuth(SWAGGER_BEARER_NAME)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete your account' })
+  async remove(@CurrentUser() user: AuthenticatedUser): Promise<void> {
+    await this.deleteMeUseCase.execute(user);
   }
 }

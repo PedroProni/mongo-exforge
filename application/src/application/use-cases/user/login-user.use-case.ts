@@ -1,25 +1,28 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { compare } from 'bcrypt';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { LoginUserCommand } from '@application/commands/export-all.commands';
-import { USER_INJECT_TOKEN } from '@domain/tokens/inject.token';
+import { compare, hash } from 'bcrypt';
+import { BCRYPT_ROUNDS, INVALID_CREDENTIALS_MESSAGE } from '@domain/constants/auth.constant';
 import { UserRepository } from '@domain/repositories/user.repository';
+import { USER_INJECT_TOKEN } from '@domain/constants/inject.constant';
 
 @Injectable()
 export class LoginUserUseCase {
+  private dummy_hash?: Promise<string>;
+
   constructor(
     @Inject(USER_INJECT_TOKEN) private readonly userRepository: UserRepository,
     private readonly jwtService: JwtService,
   ) {}
 
-  async execute(command: LoginUserCommand): Promise<{ token: string }> {
-    const user_array = await this.userRepository.find(1, 1, undefined, command.email);
-    if (user_array.length === 0) throw new NotFoundException(`User with email '${command.email}' not found`);
+  async execute(email: string, password: string): Promise<{ token: string }> {
+    const user = await this.userRepository.findByEmail(email);
+    const valid = await compare(password, user ? user.getPassword() : await this.getDummyHash());
+    if (!user || !valid) throw new UnauthorizedException(INVALID_CREDENTIALS_MESSAGE);
+    return { token: await this.jwtService.signAsync({ sub: user.getId(), email: user.getEmail() }) };
+  }
 
-    const is_password_valid = await compare(command.password, user_array[0].getPassword());
-    if (!is_password_valid) throw new NotFoundException(`Invalid password`);
-
-    const token = this.jwtService.sign({ id: user_array[0].getId(), email: user_array[0].getEmail() });
-    return { token };
+  private getDummyHash(): Promise<string> {
+    this.dummy_hash ??= hash('exforge-dummy-password', BCRYPT_ROUNDS);
+    return this.dummy_hash;
   }
 }

@@ -1,10 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { hash, genSalt } from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { USER_INJECT_TOKEN } from '@domain/tokens/inject.token';
-import { CreateUserCommand } from '@application/commands/export-all.commands';
-import { ApplicationUserMapper } from '@application/mappers/user.mapper';
+import { hash } from 'bcrypt';
+import { BCRYPT_ROUNDS } from '@domain/constants/auth.constant';
+import { UserEntity } from '@domain/entities/user.entity';
 import { UserRepository } from '@domain/repositories/user.repository';
+import { USER_INJECT_TOKEN } from '@domain/constants/inject.constant';
+import { NewUserProps } from '@domain/types/new-user-props.type';
 
 @Injectable()
 export class CreateUserUseCase {
@@ -13,13 +14,9 @@ export class CreateUserUseCase {
     private readonly jwtService: JwtService,
   ) {}
 
-  async execute(command: CreateUserCommand): Promise<{ token: string }> {
-    const hashed_password = await hash(command.password, await genSalt(10));
-    const user = ApplicationUserMapper.toEntity(command);
-    user.setPassword(hashed_password);
+  async execute(input: NewUserProps): Promise<{ token: string }> {
+    const user = UserEntity.create({ ...input, password: await hash(input.password, BCRYPT_ROUNDS) });
     await this.userRepository.create(user);
-
-    const token = this.jwtService.sign({ id: user.getId(), email: user.getEmail() });
-    return { token };
+    return { token: await this.jwtService.signAsync({ sub: user.getId(), email: user.getEmail() }) };
   }
 }

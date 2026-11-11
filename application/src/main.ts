@@ -1,31 +1,30 @@
-import { NestFactory } from '@nestjs/core';
-import * as express from 'express';
-import { join } from 'path';
-import { Queue } from 'bullmq';
-import { getQueueToken } from '@nestjs/bullmq';
-import { EnvConfigService } from '@common/env/services/env-config.service';
-import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { EnvConfigService } from '@common/env/services/env-config.service';
+import { setupBullBoard } from '@infrastructure/dashboard/bull-board';
 import { setupSwagger } from '@infrastructure/documentation/swagger';
-import { CorsService } from '@infrastructure/http-security/services/cors.service';
-import { setupBullDashboard } from '@infrastructure/cache/dashboard/bull-dashboard';
+import { CorsService } from '@infrastructure/http-security/cors.service';
+import { HelmetService } from '@infrastructure/http-security/helmet.service';
+import { AppModule } from './app.module';
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  app.useGlobalPipes(new ValidationPipe());
-
-  app.use('/exports', express.static(join(process.cwd(), 'tmp', 'exports')));
-
-  const corsService = app.get(CorsService);
-  await corsService.setCors(app);
+async function bootstrap(): Promise<void> {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const envConfigService = app.get(EnvConfigService);
 
-  const queues: Queue[] = [app.get<Queue>(getQueueToken('send-job')), app.get<Queue>(getQueueToken('failed-jobs'))];
+  if (envConfigService.trustProxy()) app.set('trust proxy', 1);
+  app.get(HelmetService).applyHelmet(app);
+  app.get(CorsService).setCors(app);
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
 
-  const serverAdapter = setupBullDashboard(queues, envConfigService);
-  app.use('/bull-board', serverAdapter.getRouter());
+  const webDistDir = envConfigService.getWebDistDir();
+  if (webDistDir) app.useStaticAssets(webDistDir);
 
+  setupBullBoard(app, envConfigService);
   setupSwagger(app);
-  await app.listen(process.env.PORT ?? 3000);
+  app.enableShutdownHooks();
+
+  await app.listen(envConfigService.getPort());
 }
-bootstrap();
+
+void bootstrap();

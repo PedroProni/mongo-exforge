@@ -1,33 +1,27 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
-import { UserTier } from '@domain/enums/all.enums';
+import { HydratedDocument } from 'mongoose';
 
-export type UserDocument = User & Document;
+export type UserDocument = HydratedDocument<User>;
 
 @Schema({ timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }, versionKey: false, collection: 'user' })
 export class User {
-  @Prop()
+  @Prop({ required: true, type: String })
   _id!: string;
 
-  @Prop({ required: true, enum: UserTier, type: String })
-  tier!: UserTier;
-
-  @Prop({ required: true })
+  @Prop({ required: true, type: String })
   name!: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, type: String })
   surname!: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, type: String, unique: true, lowercase: true, trim: true })
   email!: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, type: String })
   password!: string;
 
-  @Prop({ type: Date, default: Date.now })
   created_at!: Date;
 
-  @Prop({ type: Date, default: Date.now })
   updated_at!: Date;
 }
 

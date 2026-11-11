@@ -1,12 +1,9 @@
 import { Module } from '@nestjs/common';
-import { CorsService } from '@infrastructure/http-security/services/cors.service';
-import { HelmetService } from '@infrastructure/http-security/services/helmet.service';
-import { CsrfService } from '@infrastructure/http-security/services/csrf.service';
-import { EnvConfigModule } from '@common/env/env-config.module';
+import { CorsService } from '@infrastructure/http-security/cors.service';
+import { HelmetService } from '@infrastructure/http-security/helmet.service';
 
 @Module({
-  imports: [EnvConfigModule],
-  providers: [CorsService, HelmetService, CsrfService],
-  exports: [CorsService, HelmetService, CsrfService],
+  providers: [CorsService, HelmetService],
+  exports: [CorsService, HelmetService],
 })
 export class HttpSecurityModule {}

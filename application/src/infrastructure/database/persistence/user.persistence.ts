@@ -1,39 +1,51 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { DomainUserMapper } from '@domain/mappers/user.mapper';
-import { UserEntity } from '@domain/entities/user.entity';
 import { User, UserDocument } from '@infrastructure/database/schemas/user.schema';
+import { UserDocumentMapper } from '@infrastructure/database/mappers/user.mapper';
+import { UserEntity } from '@domain/entities/user.entity';
+import { UserRepository } from '@domain/repositories/user.repository';
+import { UserChanges } from '@domain/types/user-changes.type';
+import { UserProps } from '@domain/types/user-props.type';
+import { DUPLICATE_KEY_CODE, EMAIL_TAKEN_MESSAGE } from '@domain/constants/auth.constant';
 
 @Injectable()
-export class UserPersistence {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+export class UserPersistence implements UserRepository {
+  constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>) {}
 
   async create(user: UserEntity): Promise<UserEntity> {
-    const already_exists = await this.userModel.findOne({ email: user.getEmail() }).exec();
-
-    if (already_exists) throw new NotFoundException('User with this email already exists');
-
-    const new_user = DomainUserMapper.toPersistence(user);
-    await this.userModel.create(new_user);
-    return DomainUserMapper.toDomain(new_user);
+    try {
+      await this.userModel.create(UserDocumentMapper.toPersistence(user));
+    } catch (error) {
+      if ((error as { code?: number }).code === DUPLICATE_KEY_CODE) throw new ConflictException(EMAIL_TAKEN_MESSAGE);
+      throw error;
+    }
+    return user;
   }
 
-  async find(page: number, limit: number, id?: string, email?: string): Promise<UserEntity[]> {
-    const query: any = {};
-    if (id) query._id = id;
-    if (email) query.email = email;
-
-    const users = await this.userModel.find(query).skip((page - 1) * limit).limit(limit).exec();
-    return users.map(DomainUserMapper.toDomain);
+  async findById(id: string): Promise<UserEntity | null> {
+    const raw = await this.userModel.findById(id).lean<UserProps>().exec();
+    return raw ? UserDocumentMapper.toDomain(raw) : null;
   }
 
-  async update(user: UserEntity): Promise<UserEntity> {
-    const updated_user = await this.userModel.findByIdAndUpdate(user.getId(), DomainUserMapper.toPersistence(user), { new: true }).exec();
-    return DomainUserMapper.toDomain(updated_user);
+  async findByEmail(email: string): Promise<UserEntity | null> {
+    const raw = await this.userModel.findOne({ email: email.trim().toLowerCase() }).lean<UserProps>().exec();
+    return raw ? UserDocumentMapper.toDomain(raw) : null;
+  }
+
+  async update(id: string, changes: UserChanges): Promise<UserEntity | null> {
+    const patch = Object.fromEntries(Object.entries(changes).filter(([, value]) => value !== undefined));
+    if (typeof patch.email === 'string') patch.email = patch.email.trim().toLowerCase();
+    try {
+      const raw = await this.userModel.findByIdAndUpdate(id, { $set: patch }, { new: true }).lean<UserProps>().exec();
+      return raw ? UserDocumentMapper.toDomain(raw) : null;
+    } catch (error) {
+      if ((error as { code?: number }).code === DUPLICATE_KEY_CODE) throw new ConflictException(EMAIL_TAKEN_MESSAGE);
+      throw error;
+    }
   }
 
   async delete(id: string): Promise<void> {
-    await this.userModel.findByIdAndDelete(id).exec();
+    await this.userModel.deleteOne({ _id: id }).exec();
   }
 }

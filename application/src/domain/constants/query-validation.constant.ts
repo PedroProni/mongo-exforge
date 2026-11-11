@@ -1,0 +1,13 @@
+export const COLLECTION_NAME_PATTERN = /^(?!system\.)[A-Za-z0-9_][A-Za-z0-9_.-]{0,99}$/;
+export const FIELD_PATH_PATTERN = /^[A-Za-z_][A-Za-z0-9_-]{0,63}(\.[A-Za-z0-9_-]{1,64}){0,7}$/;
+export const SYSTEM_COLLECTION_PREFIX = 'system.';
+export const MAX_QUERY_FILTERS = 20;
+export const MAX_SELECTED_FIELDS = 100;
+export const MAX_SORT_KEYS = 5;
+export const MAX_IN_VALUES = 1000;
+export const MAX_STRING_VALUE_LENGTH = 2000;
+export const MAX_URI_LENGTH = 2048;
+export const MAX_INSPECT_URIS = 5;
+export const MAX_INSPECT_COLLECTIONS = 200;
+export const INSPECT_SAMPLE_SIZE = 10;
+export const FORBIDDEN_SEGMENT = '__proto__';

@@ -1,34 +1,29 @@
 import { Injectable } from '@nestjs/common';
-import * as crypto from 'crypto';
+import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
 import { EnvConfigService } from '@common/env/services/env-config.service';
+import { ENCRYPTION_ALGORITHM, ENCRYPTION_IV_BYTES, ENCRYPTION_KEY_BYTES, ENCRYPTION_SEPARATOR, ENCRYPTION_VERSION } from '@domain/constants/encryption.constant';
 
 @Injectable()
 export class EncryptionService {
-  private readonly secret_key: Buffer;
+  private readonly key: Buffer;
 
-  constructor(private readonly envConfigService: EnvConfigService) {
-    this.secret_key = Buffer.from(this.envConfigService.getEncryptionSecret(), 'hex');
+  constructor(envConfigService: EnvConfigService) {
+    this.key = Buffer.from(envConfigService.getEncryptionSecret(), 'hex');
+    if (this.key.length !== ENCRYPTION_KEY_BYTES) throw new Error('ENCRYPTION_SECRET must decode to 32 bytes');
   }
 
-  encrypt(data: string): string {
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv('aes-256-cbc', this.secret_key, iv);
-    let encrypted = cipher.update(data, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-
-    return `${iv.toString('hex')}:${encrypted}`;
+  encrypt(plain: string): string {
+    const iv = randomBytes(ENCRYPTION_IV_BYTES);
+    const cipher = createCipheriv(ENCRYPTION_ALGORITHM, this.key, iv);
+    const encrypted = Buffer.concat([cipher.update(plain, 'utf8'), cipher.final()]);
+    return [ENCRYPTION_VERSION, iv.toString('hex'), cipher.getAuthTag().toString('hex'), encrypted.toString('hex')].join(ENCRYPTION_SEPARATOR);
   }
 
-  decrypt(data: string): string {
-    const [iv_hex, encrypted] = data.split(':');
-
-    const iv = Buffer.from(iv_hex, 'hex');
-
-    const decipher = crypto.createDecipheriv('aes-256-cbc', this.secret_key, iv);
-
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-
-    return decrypted;
+  decrypt(payload: string): string {
+    const [version, iv_hex, tag_hex, data_hex] = payload.split(ENCRYPTION_SEPARATOR);
+    if (version !== ENCRYPTION_VERSION || !iv_hex || !tag_hex || !data_hex) throw new Error('Unsupported encrypted payload');
+    const decipher = createDecipheriv(ENCRYPTION_ALGORITHM, this.key, Buffer.from(iv_hex, 'hex'));
+    decipher.setAuthTag(Buffer.from(tag_hex, 'hex'));
+    return Buffer.concat([decipher.update(Buffer.from(data_hex, 'hex')), decipher.final()]).toString('utf8');
   }
 }

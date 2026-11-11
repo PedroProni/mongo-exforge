@@ -1,19 +1,21 @@
-import { Body, Controller, Headers, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { ApplicationMongoMapper } from '@application/mappers/mongo.mapper';
-import { SelectedURIsDto } from '@shared/dtos/export-all.dto';
-import { SelectURIsUseCase } from '@application/use-cases/mongo/select-uris.use-case';
+import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { InspectSourcesUseCase } from '@application/use-cases/mongo/inspect-sources.use-case';
+import { SWAGGER_BEARER_NAME } from '@infrastructure/documentation/config/swagger-constants.config';
+import { CollectionPresenter } from '@presentation/presenters/collection.presenter';
+import { CollectionInfo } from '@domain/types/collection-info.type';
+import { InspectSourcesDto } from '@shared/dtos/mongo/inspect-sources.dto';
 
 @ApiTags('Mongo')
+@ApiBearerAuth(SWAGGER_BEARER_NAME)
 @Controller('mongo')
 export class MongoController {
-  constructor(private readonly selectURIsUseCase: SelectURIsUseCase) {}
+  constructor(private readonly inspectSourcesUseCase: InspectSourcesUseCase) {}
 
-  @Post()
-  @ApiOperation({ summary: 'Create a new job' })
-  @HttpCode(HttpStatus.CREATED)
-  async create(@Headers('user-token') user_token: string, @Body() selectedURIsDto: SelectedURIsDto) {
-    const command = ApplicationMongoMapper.toSelectURIsCommand(selectedURIsDto);
-    return await this.selectURIsUseCase.execute(command, user_token);
+  @Post('inspect')
+  @ApiOperation({ summary: 'List the collections and sampled fields of MongoDB sources' })
+  @HttpCode(HttpStatus.OK)
+  async inspect(@Body() dto: InspectSourcesDto): Promise<CollectionInfo[]> {
+    return (await this.inspectSourcesUseCase.execute(dto.uris)).map(item => CollectionPresenter.toResponse(item));
   }
 }

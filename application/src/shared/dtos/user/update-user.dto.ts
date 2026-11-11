@@ -1,20 +1,23 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEmail, IsOptional, IsString, Length, MaxLength } from 'class-validator';
+import { MAX_NAME_LENGTH } from '@domain/constants/auth.constant';
 
 export class UpdateUserDto {
-  @ApiProperty({ example: 'John', description: 'First name of the user' })
+  @ApiPropertyOptional({ example: 'John' })
+  @IsOptional()
   @IsString()
+  @Length(1, MAX_NAME_LENGTH)
   readonly name?: string;
 
-  @ApiProperty({ example: 'Doe', description: 'Surname of the user' })
+  @ApiPropertyOptional({ example: 'Doe' })
+  @IsOptional()
   @IsString()
+  @Length(1, MAX_NAME_LENGTH)
   readonly surname?: string;
 
-  @ApiProperty({ example: 'john.doe@example.com', description: 'Email address of the user' })
-  @IsString()
+  @ApiPropertyOptional({ example: 'john.doe@example.com' })
+  @IsOptional()
+  @IsEmail()
+  @MaxLength(254)
   readonly email?: string;
-
-  @ApiProperty({ example: 'password123', description: 'Password for the user account' })
-  @IsString()
-  readonly password?: string;
 }
