@@ -31,7 +31,7 @@ export function JobsPage() {
     }
   };
 
-  if (error) return <p className="error">{error}</p>;
+  if (error) return <p className='error'>{error}</p>;
   if (!data) return <p>{t('common.loading')}</p>;
   const pages = Math.max(1, Math.ceil(data.total / JOBS_PAGE_SIZE));
 
@@ -41,7 +41,7 @@ export function JobsPage() {
       {data.items.length === 0 ? (
         <p>{t('common.empty')}</p>
       ) : (
-        <div className="table-wrap">
+        <div className='table-wrap'>
           <table>
             <thead>
               <tr>
@@ -49,7 +49,7 @@ export function JobsPage() {
                 <th>{t('jobs.format')}</th>
                 <th>{t('jobs.status')}</th>
                 <th>{t('jobs.rows')}</th>
-                <th>{t('jobs.created')}</th>
+                <th className='col-created'>{t('jobs.created')}</th>
                 <th>{t('jobs.actions')}</th>
               </tr>
             </thead>
@@ -58,26 +58,28 @@ export function JobsPage() {
                 <tr key={job.id}>
                   <td>
                     {job.name}
-                    {job.error && <div className="error small">{job.error}</div>}
-                    {job.attempts > 1 && <div className="small">{t('jobs.attempts', { count: job.attempts })}</div>}
+                    {job.error && <div className='error small'>{job.error}</div>}
+                    {job.attempts > 1 && <div className='small'>{t('jobs.attempts', { count: job.attempts })}</div>}
                   </td>
                   <td>{job.export_format.toUpperCase()}</td>
                   <td>
                     <StatusBadge status={job.status} />
                   </td>
                   <td>{job.rows_exported}</td>
-                  <td>{new Date(job.created_at).toLocaleString()}</td>
-                  <td className="actions">
-                    {job.status === 'completed' && job.file_available && (
-                      <button type="button" onClick={() => void download(job)}>
-                        {t('jobs.download')}
-                      </button>
-                    )}
-                    {job.status !== 'pending' && job.status !== 'in_progress' && (
-                      <button type="button" className="danger" onClick={() => void remove(job)}>
-                        {t('common.delete')}
-                      </button>
-                    )}
+                  <td className='col-created'>{new Date(job.created_at).toLocaleString()}</td>
+                  <td>
+                    <div className='actions'>
+                      {job.status === 'completed' && job.file_available && (
+                        <button type='button' onClick={() => void download(job)}>
+                          {t('jobs.download')}
+                        </button>
+                      )}
+                      {job.status !== 'pending' && job.status !== 'in_progress' && (
+                        <button type='button' className='danger' onClick={() => void remove(job)}>
+                          {t('common.delete')}
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -85,12 +87,12 @@ export function JobsPage() {
           </table>
         </div>
       )}
-      <div className="pager">
-        <button type="button" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+      <div className='pager'>
+        <button type='button' disabled={page <= 1} onClick={() => setPage(page - 1)}>
           {t('common.previous')}
         </button>
         <span>{t('jobs.page', { page, pages })}</span>
-        <button type="button" disabled={page >= pages} onClick={() => setPage(page + 1)}>
+        <button type='button' disabled={page >= pages} onClick={() => setPage(page + 1)}>
           {t('common.next')}
         </button>
       </div>

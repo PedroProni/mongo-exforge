@@ -29,7 +29,7 @@ export function LoginPage() {
   const bind = (field: keyof typeof form) => ({ value: form[field], onChange: (event: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [field]: event.target.value }) });
 
   return (
-    <div className="auth-card">
+    <div className='auth-card'>
       <h1>{t('app.title')}</h1>
       <p>{t('app.tagline')}</p>
       <form onSubmit={submit}>
@@ -47,17 +47,17 @@ export function LoginPage() {
         )}
         <label>
           {t('auth.email')}
-          <input type="email" required autoComplete="email" {...bind('email')} />
+          <input type='email' required autoComplete='email' {...bind('email')} />
         </label>
         <label>
           {t('auth.password')}
-          <input type="password" required minLength={registering ? MIN_PASSWORD_LENGTH : 1} autoComplete={registering ? 'new-password' : 'current-password'} {...bind('password')} />
+          <input type='password' required minLength={registering ? MIN_PASSWORD_LENGTH : 1} autoComplete={registering ? 'new-password' : 'current-password'} {...bind('password')} />
         </label>
-        <button type="submit" disabled={busy}>
+        <button type='submit' disabled={busy}>
           {registering ? t('auth.register') : t('auth.login')}
         </button>
       </form>
-      <button type="button" className="link" onClick={() => setRegistering(!registering)}>
+      <button type='button' className='link' onClick={() => setRegistering(!registering)}>
         {registering ? t('auth.toLogin') : t('auth.toRegister')}
       </button>
     </div>

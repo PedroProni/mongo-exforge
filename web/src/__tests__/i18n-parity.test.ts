@@ -3,7 +3,20 @@ import en from '../i18n/en.json';
 import pt from '../i18n/pt.json';
 import { createTranslate } from '../i18n/translate';
 
-const REQUIRED_KEYS = ['app.title', 'jobs.status.pending', 'jobs.status.in_progress', 'jobs.status.completed', 'jobs.status.failed', 'jobs.status.expired', 'operator.eq', 'operator.nin', 'sort.asc', 'sort.desc', 'new.submit', 'jobs.downloadFailed'];
+const REQUIRED_KEYS = [
+  'app.title',
+  'jobs.status.pending',
+  'jobs.status.in_progress',
+  'jobs.status.completed',
+  'jobs.status.failed',
+  'jobs.status.expired',
+  'operator.eq',
+  'operator.nin',
+  'sort.asc',
+  'sort.desc',
+  'new.submit',
+  'jobs.downloadFailed',
+];
 
 describe('i18n parity', () => {
   it('has the same keys in both languages', () => {

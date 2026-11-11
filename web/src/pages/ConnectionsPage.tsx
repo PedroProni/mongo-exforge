@@ -53,20 +53,20 @@ export function ConnectionsPage() {
   return (
     <section>
       <h2>{t('connections.title')}</h2>
-      <form onSubmit={add} className="stack">
+      <form onSubmit={add} className='stack'>
         <label>
           {t('connections.name')}
           <input required value={name} onChange={event => setName(event.target.value)} />
         </label>
         <label>
           {t('connections.uri')}
-          <input required value={uri} onChange={event => setUri(event.target.value)} autoComplete="off" />
+          <input required value={uri} onChange={event => setUri(event.target.value)} autoComplete='off' />
         </label>
-        <div className="row">
-          <button type="button" disabled={!uri} onClick={() => void test()}>
+        <div className='row'>
+          <button type='button' disabled={!uri} onClick={() => void test()}>
             {t('connections.test')}
           </button>
-          <button type="submit">{t('connections.add')}</button>
+          <button type='submit'>{t('connections.add')}</button>
         </div>
       </form>
       {items === null ? (
@@ -74,14 +74,14 @@ export function ConnectionsPage() {
       ) : items.length === 0 ? (
         <p>{t('common.empty')}</p>
       ) : (
-        <ul className="list">
+        <ul className='list'>
           {items.map(item => (
             <li key={item.id}>
               <div>
                 <strong>{item.name}</strong>
-                <div className="small mono">{item.uri_masked}</div>
+                <div className='small mono'>{item.uri_masked}</div>
               </div>
-              <button type="button" className="danger" onClick={() => void remove(item)}>
+              <button type='button' className='danger' onClick={() => void remove(item)}>
                 {t('common.delete')}
               </button>
             </li>

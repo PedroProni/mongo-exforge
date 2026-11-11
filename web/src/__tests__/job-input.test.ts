@@ -2,7 +2,19 @@ import { describe, expect, it } from 'vitest';
 import { buildJobInput, parseValue, splitList } from '../lib/job-input';
 import { JobDraft } from '../types/form.types';
 
-const DRAFT: JobDraft = { name: 'Adults', export_format: 'csv', source: 'saved', connection_id: 'c1', uri: '', collection: 'users', filters: [], fields: '', sort_field: '', sort_direction: 'asc', max_rows: '' };
+const DRAFT: JobDraft = {
+  name: 'Adults',
+  export_format: 'csv',
+  source: 'saved',
+  connection_id: 'c1',
+  uri: '',
+  collection: 'users',
+  filters: [],
+  fields: '',
+  sort_field: '',
+  sort_direction: 'asc',
+  max_rows: '',
+};
 
 describe('parseValue', () => {
   it('parses numbers, booleans and strings', () => {
@@ -28,7 +40,16 @@ describe('buildJobInput', () => {
   });
 
   it('uses the uri source and optional fields', () => {
-    const input = buildJobInput({ ...DRAFT, source: 'uri', uri: 'mongodb://h/db', filters: [{ field: 'age', operator: 'gte', value: '18' }], fields: 'name,age', sort_field: 'age', sort_direction: 'desc', max_rows: '50' });
+    const input = buildJobInput({
+      ...DRAFT,
+      source: 'uri',
+      uri: 'mongodb://h/db',
+      filters: [{ field: 'age', operator: 'gte', value: '18' }],
+      fields: 'name,age',
+      sort_field: 'age',
+      sort_direction: 'desc',
+      max_rows: '50',
+    });
     expect(input.query).toEqual([{ uri: 'mongodb://h/db', collection: 'users', field: 'age', operator: 'gte', value: 18 }]);
     expect(input.fields).toEqual(['name', 'age']);
     expect(input.sort).toEqual({ age: 'desc' });

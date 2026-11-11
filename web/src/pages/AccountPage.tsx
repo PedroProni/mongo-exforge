@@ -51,7 +51,7 @@ export function AccountPage() {
   return (
     <section>
       <h2>{t('account.title')}</h2>
-      <form onSubmit={saveProfile} className="stack">
+      <form onSubmit={saveProfile} className='stack'>
         <h3>{t('account.profile')}</h3>
         <label>
           {t('auth.name')}
@@ -61,24 +61,24 @@ export function AccountPage() {
           {t('auth.surname')}
           <input required value={surname} onChange={event => setSurname(event.target.value)} />
         </label>
-        <button type="submit">{t('common.save')}</button>
+        <button type='submit'>{t('common.save')}</button>
       </form>
-      <form onSubmit={savePassword} className="stack">
+      <form onSubmit={savePassword} className='stack'>
         <h3>{t('account.password')}</h3>
         <label>
           {t('account.currentPassword')}
-          <input type="password" required autoComplete="current-password" value={current} onChange={event => setCurrent(event.target.value)} />
+          <input type='password' required autoComplete='current-password' value={current} onChange={event => setCurrent(event.target.value)} />
         </label>
         <label>
           {t('account.newPassword')}
-          <input type="password" required minLength={MIN_PASSWORD_LENGTH} autoComplete="new-password" value={next} onChange={event => setNext(event.target.value)} />
+          <input type='password' required minLength={MIN_PASSWORD_LENGTH} autoComplete='new-password' value={next} onChange={event => setNext(event.target.value)} />
         </label>
-        <button type="submit">{t('common.save')}</button>
+        <button type='submit'>{t('common.save')}</button>
       </form>
-      <div className="stack">
+      <div className='stack'>
         <h3>{t('account.danger')}</h3>
         <p>{t('account.dangerText')}</p>
-        <button type="button" className="danger" onClick={removeAccount}>
+        <button type='button' className='danger' onClick={removeAccount}>
           {t('common.delete')}
         </button>
       </div>

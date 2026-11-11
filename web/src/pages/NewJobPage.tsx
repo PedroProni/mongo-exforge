@@ -56,7 +56,7 @@ export function NewJobPage() {
   return (
     <section>
       <h2>{t('new.title')}</h2>
-      <form onSubmit={submit} className="stack">
+      <form onSubmit={submit} className='stack'>
         <label>
           {t('new.name')}
           <input required value={draft.name} onChange={event => patch({ name: event.target.value })} />
@@ -74,15 +74,15 @@ export function NewJobPage() {
         <label>
           {t('new.source')}
           <select value={draft.source} onChange={event => patch({ source: event.target.value as JobDraft['source'] })}>
-            <option value="saved">{t('new.sourceSaved')}</option>
-            <option value="uri">{t('new.sourceUri')}</option>
+            <option value='saved'>{t('new.sourceSaved')}</option>
+            <option value='uri'>{t('new.sourceUri')}</option>
           </select>
         </label>
         {draft.source === 'saved' ? (
           <label>
             {t('new.connection')}
             <select required value={draft.connection_id} onChange={event => patch({ connection_id: event.target.value })}>
-              <option value="">{t('new.selectConnection')}</option>
+              <option value=''>{t('new.selectConnection')}</option>
               {connections.map(connection => (
                 <option key={connection.id} value={connection.id}>
                   {connection.name}
@@ -93,27 +93,27 @@ export function NewJobPage() {
         ) : (
           <label>
             {t('new.uri')}
-            <input required autoComplete="off" value={draft.uri} onChange={event => patch({ uri: event.target.value })} />
+            <input required autoComplete='off' value={draft.uri} onChange={event => patch({ uri: event.target.value })} />
           </label>
         )}
-        <div className="row">
-          <button type="button" disabled={!sourceReady} onClick={() => void loadCollections()}>
+        <div className='row'>
+          <button type='button' disabled={!sourceReady} onClick={() => void loadCollections()}>
             {t('new.loadCollections')}
           </button>
         </div>
         <label>
           {t('new.collection')}
-          <input required list="collection-options" value={draft.collection} onChange={event => patch({ collection: event.target.value })} />
-          <datalist id="collection-options">
+          <input required list='collection-options' value={draft.collection} onChange={event => patch({ collection: event.target.value })} />
+          <datalist id='collection-options'>
             {collections.map(item => (
               <option key={item.collection_name} value={item.collection_name} />
             ))}
           </datalist>
         </label>
-        {known && <div className="small mono">{known.collection_fields.join(', ')}</div>}
+        {known && <div className='small mono'>{known.collection_fields.join(', ')}</div>}
         <h3>{t('new.filters')}</h3>
         {draft.filters.map((filter, index) => (
-          <div className="row" key={index}>
+          <div className='row' key={index}>
             <input aria-label={t('new.field')} placeholder={t('new.field')} value={filter.field} onChange={event => patchFilter(index, { field: event.target.value })} />
             <select aria-label={t('new.operator')} value={filter.operator} onChange={event => patchFilter(index, { operator: event.target.value as FilterDraft['operator'] })}>
               {QUERY_OPERATORS.map(operator => (
@@ -123,13 +123,13 @@ export function NewJobPage() {
               ))}
             </select>
             <input aria-label={t('new.value')} placeholder={t('new.valueHint')} value={filter.value} onChange={event => patchFilter(index, { value: event.target.value })} />
-            <button type="button" className="danger" onClick={() => patch({ filters: draft.filters.filter((_, position) => position !== index) })}>
+            <button type='button' className='danger' onClick={() => patch({ filters: draft.filters.filter((_, position) => position !== index) })}>
               {t('new.removeFilter')}
             </button>
           </div>
         ))}
-        <div className="row">
-          <button type="button" onClick={() => patch({ filters: [...draft.filters, EMPTY_FILTER] })}>
+        <div className='row'>
+          <button type='button' onClick={() => patch({ filters: [...draft.filters, EMPTY_FILTER] })}>
             {t('new.addFilter')}
           </button>
         </div>
@@ -137,7 +137,7 @@ export function NewJobPage() {
           {t('new.fields')} ({t('common.optional')})
           <input value={draft.fields} onChange={event => patch({ fields: event.target.value })} />
         </label>
-        <div className="row">
+        <div className='row'>
           <label>
             {t('new.sort')} ({t('common.optional')})
             <input value={draft.sort_field} onChange={event => patch({ sort_field: event.target.value })} />
@@ -154,10 +154,10 @@ export function NewJobPage() {
           </label>
           <label>
             {t('new.maxRows')} ({t('common.optional')})
-            <input type="number" min={1} value={draft.max_rows} onChange={event => patch({ max_rows: event.target.value })} />
+            <input type='number' min={1} value={draft.max_rows} onChange={event => patch({ max_rows: event.target.value })} />
           </label>
         </div>
-        <button type="submit" disabled={busy || !sourceReady}>
+        <button type='submit' disabled={busy || !sourceReady}>
           {t('new.submit')}
         </button>
       </form>
