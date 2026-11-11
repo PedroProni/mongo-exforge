@@ -55,7 +55,7 @@ See `application/.env.example`. The required keys are `MONGODB_URI`, `JWT_SECRET
 
 ## Authentication (breaking change)
 
-Every route requires `Authorization: Bearer <token>`, except `POST /user` (sign up), `POST /user/login` and `GET /health`.
+Every route requires `Authorization: Bearer <token>`, except `POST /user` (sign up), `POST /user/login`, `GET /health` and `GET /files/:token` (signed link).
 
 - Missing or invalid token: `401`.
 - There is no user listing. Users only see and change their own account through `GET|PUT|DELETE /user/me`.
