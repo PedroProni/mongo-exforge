@@ -19,6 +19,7 @@ import { MongoSourceAdapter } from '@infrastructure/integrations/mongo-source.ad
 import { BullJobQueueAdapter } from '@infrastructure/queue/bull-job-queue.adapter';
 import { ExportJobProcessor } from '@infrastructure/queue/export-job.processor';
 import { S3StorageAdapter } from '@infrastructure/storage/s3-storage.adapter';
+import { STORAGE_INJECT_TOKEN } from '@domain/constants/inject.constant';
 import { createApp } from './e2e-app';
 
 const SOURCE_DB = 'exforge_e2e_source';
@@ -579,9 +580,13 @@ describe('exports (e2e)', () => {
       MongoSourceAdapter,
       BullJobQueueAdapter,
       ExportJobProcessor,
-      S3StorageAdapter,
+      STORAGE_INJECT_TOKEN,
     ])('resolves %p from the container', provider => {
       expect(app.get(provider, { strict: false })).toBeDefined();
+    });
+
+    it('uses the s3 adapter by default', () => {
+      expect(app.get(STORAGE_INJECT_TOKEN, { strict: false })).toBeInstanceOf(S3StorageAdapter);
     });
   });
 
