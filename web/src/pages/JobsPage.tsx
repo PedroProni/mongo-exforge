@@ -46,7 +46,7 @@ export function JobsPage() {
             <thead>
               <tr>
                 <th>{t('jobs.name')}</th>
-                <th>{t('jobs.format')}</th>
+                <th className='col-format'>{t('jobs.format')}</th>
                 <th>{t('jobs.status')}</th>
                 <th>{t('jobs.rows')}</th>
                 <th className='col-created'>{t('jobs.created')}</th>
@@ -61,7 +61,7 @@ export function JobsPage() {
                     {job.error && <div className='error small'>{job.error}</div>}
                     {job.attempts > 1 && <div className='small'>{t('jobs.attempts', { count: job.attempts })}</div>}
                   </td>
-                  <td>{job.export_format.toUpperCase()}</td>
+                  <td className='col-format'>{job.export_format.toUpperCase()}</td>
                   <td>
                     <StatusBadge status={job.status} />
                   </td>

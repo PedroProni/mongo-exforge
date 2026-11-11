@@ -224,8 +224,13 @@ td {
   section {
     padding: 0.9rem;
   }
-  .col-created {
+  .col-created,
+  .col-format {
     display: none;
+  }
+  td .actions button {
+    padding: 0.35rem 0.5rem;
+    font-size: 0.85rem;
   }
   th,
   td {
