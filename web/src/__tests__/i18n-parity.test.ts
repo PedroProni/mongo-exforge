@@ -23,7 +23,7 @@ describe('i18n parity', () => {
   });
 
   it('never uses the em dash', () => {
-    expect(JSON.stringify(en) + JSON.stringify(pt)).not.toContain('—');
+    expect(JSON.stringify(en) + JSON.stringify(pt)).not.toContain(String.fromCharCode(8212));
   });
 
   it('interpolates values and falls back to the key', () => {
