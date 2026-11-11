@@ -17,6 +17,9 @@ async function bootstrap(): Promise<void> {
   app.get(CorsService).setCors(app);
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
 
+  const webDistDir = envConfigService.getWebDistDir();
+  if (webDistDir) app.useStaticAssets(webDistDir);
+
   setupBullBoard(app, envConfigService);
   setupSwagger(app);
   app.enableShutdownHooks();

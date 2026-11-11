@@ -48,6 +48,12 @@ export class JobController {
     return JobPresenter.toResponse(await this.findJobUseCase.execute(user, id));
   }
 
+  @Get(':id/download-url')
+  @ApiOperation({ summary: 'Get a presigned download URL that is valid for 5 minutes' })
+  async downloadUrl(@CurrentUser() user: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string): Promise<{ url: string }> {
+    return { url: await this.downloadJobUseCase.execute(user, id) };
+  }
+
   @Get(':id/download')
   @Redirect()
   @ApiOperation({ summary: 'Redirect (302) to a presigned download URL that is valid for 5 minutes' })

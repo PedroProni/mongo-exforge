@@ -1,0 +1,12 @@
+export const TOKEN_STORAGE_KEY = 'exforge.token';
+export const LANGUAGE_STORAGE_KEY = 'exforge.language';
+export const JOB_POLL_INTERVAL_MS = 2000;
+export const JOBS_PAGE_SIZE = 10;
+export const EXPORT_FORMATS = ['csv', 'json', 'xlsx'] as const;
+export const QUERY_OPERATORS = ['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'in', 'nin'] as const;
+export const SORT_DIRECTIONS = ['asc', 'desc'] as const;
+export const ACTIVE_JOB_STATUSES = ['pending', 'in_progress'] as const;
+export const LANGUAGES = ['en', 'pt'] as const;
+export const DEFAULT_LANGUAGE = 'en';
+export const MIN_PASSWORD_LENGTH = 8;
+export const MATCH_ALL_FIELD = '_id';

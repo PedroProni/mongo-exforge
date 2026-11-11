@@ -1,8 +1,12 @@
+import { tmpdir } from 'os';
+import { join } from 'path';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DEFAULT_EXPORT_ATTEMPTS, DEFAULT_EXPORT_CONCURRENCY, DEFAULT_EXPORT_MAX_ROWS, DEFAULT_EXPORT_TTL_HOURS, DEFAULT_JWT_EXPIRES_IN } from '@domain/constants/env.constant';
 import { DEFAULT_JOB_RATE_LIMIT_PER_MINUTE } from '@domain/constants/env.constant';
 import { DEFAULT_PORT, DEFAULT_REDIS_HOST, DEFAULT_REDIS_PORT, DEFAULT_S3_REGION, PRODUCTION_STAGE } from '@domain/constants/env.constant';
+import { StorageDriver } from '@domain/enums/storage-driver.enum';
+import { LOCAL_STORAGE_DIR_NAME } from '@domain/constants/local-storage.constant';
 import { S3Config } from '@domain/types/s3-config.type';
 
 @Injectable()
@@ -121,5 +125,17 @@ export class EnvConfigService {
       force_path_style: this.flag('S3_FORCE_PATH_STYLE'),
       auto_create_bucket: this.flag('S3_AUTO_CREATE_BUCKET'),
     };
+  }
+
+  getStorageDriver(): StorageDriver {
+    return this.text('STORAGE_DRIVER', StorageDriver.S3) === StorageDriver.LOCAL ? StorageDriver.LOCAL : StorageDriver.S3;
+  }
+
+  getLocalStorageDir(): string {
+    return this.text('LOCAL_STORAGE_DIR') || join(tmpdir(), LOCAL_STORAGE_DIR_NAME);
+  }
+
+  getWebDistDir(): string {
+    return this.text('WEB_DIST_DIR');
   }
 }
