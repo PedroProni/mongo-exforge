@@ -42,7 +42,16 @@ openssl rand -base64 48   # JWT_SECRET (at least 32 characters)
 
 ### Environment
 
-See `application/.env.example`. The required keys are `MONGODB_URI`, `JWT_SECRET`, `ENCRYPTION_SECRET`, `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY`. The app refuses to start when one is missing or weak.
+See `application/.env.example`. The required keys are `MONGODB_URI`, `JWT_SECRET` and `ENCRYPTION_SECRET`, plus `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY` while `STORAGE_DRIVER=s3` (the default). The app refuses to start when one is missing or weak.
+
+### Storage drivers
+
+- `s3` (default): any S3-compatible store (MinIO locally, Cloudflare R2 when deployed). Downloads are presigned URLs.
+- `local`: files are written under `LOCAL_STORAGE_DIR` (default: the system temp directory) and served by the API at `/files/<token>`. The token is an HMAC-signed, short-lived link bound to one file. Use it for demos and hosts without persistent disk, since files vanish when the instance restarts.
+
+### Web app
+
+`web/` is a small React app (English and Portuguese) with login, exports, new export, saved connections and account pages. In development run `npm run dev` inside `web/` (it proxies to the API on port 3000). To let the API serve the build, run `npm run build` inside `web/` and set `WEB_DIST_DIR` to the absolute path of `web/dist`; the app then opens at `/`.
 
 ## Authentication (breaking change)
 
@@ -60,6 +69,8 @@ Every route requires `Authorization: Bearer <token>`, except `POST /user` (sign 
 | POST | `/user` | Sign up, returns `{ token }` |
 | POST | `/user/login` | Log in, returns `{ token }` |
 | GET, PUT, DELETE | `/user/me` | Your account |
+| GET | `/job/:id/download-url` | Same as `/job/:id/download`, but returns `{ url }` as JSON |
+| GET | `/files/:token` | Public signed download used by `STORAGE_DRIVER=local` |
 | POST | `/mongo/inspect` | List collections and sampled fields of up to 5 sources |
 | POST | `/job` | Create an export job |
 | GET | `/job` | List your jobs (`page`, `limit`) |
@@ -114,6 +125,9 @@ Create the bucket and an API token with object read and write permission in the 
 cd application
 npm test            # unit tests
 npm run test:e2e    # needs MongoDB, Redis and MinIO
+
+cd ../web
+npm test            # web unit tests and the i18n parity suite
 ```
 
 The e2e suites read the same variables as the app (`MONGODB_URI`, `REDIS_HOST`, `REDIS_PORT`, `S3_*`) and default to the standard local ports. They create their own users and a throwaway source database, and use `EXFORGE_ALLOW_PRIVATE_URIS=true` so the test MongoDB on localhost is reachable; a separate suite proves the same URIs are refused when it is off.
@@ -121,6 +135,7 @@ The e2e suites read the same variables as the app (`MONGODB_URI`, `REDIS_HOST`, 
 ## Project structure
 
 ```
+web/                 React app (Vite), translations in src/i18n
 application/src
 ├── domain/          entities, ports, repositories, types, constants, enums
 ├── application/     use cases, services, errors
