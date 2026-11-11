@@ -218,6 +218,22 @@ td {
   background: var(--danger);
 }
 @media (max-width: 600px) {
+  .topbar {
+    gap: 0.5rem 0.75rem;
+    padding: 0.6rem 0.75rem;
+  }
+  .topbar strong {
+    flex: 1;
+  }
+  .topbar nav {
+    order: 3;
+    flex: 0 0 100%;
+    flex-wrap: nowrap;
+    gap: 0.9rem;
+    overflow-x: auto;
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
   main {
     margin: 0.75rem auto;
   }
