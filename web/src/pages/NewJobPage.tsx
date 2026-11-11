@@ -2,14 +2,12 @@ import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { connectionApi, jobApi } from '../api/endpoints';
 import { useToast } from '../components/ToastProvider';
+import { EMPTY_FILTER, INITIAL_DRAFT } from '../constants/job-form.constants';
 import { EXPORT_FORMATS, QUERY_OPERATORS, SORT_DIRECTIONS } from '../constants/app.constants';
 import { useI18n } from '../i18n/I18nProvider';
 import { buildJobInput } from '../lib/job-input';
 import { CollectionInfo, Connection } from '../types/api.types';
 import { FilterDraft, JobDraft } from '../types/form.types';
-
-const EMPTY_FILTER: FilterDraft = { field: '', operator: 'eq', value: '' };
-const INITIAL_DRAFT: JobDraft = { name: '', export_format: 'csv', source: 'saved', connection_id: '', uri: '', collection: '', filters: [], fields: '', sort_field: '', sort_direction: 'asc', max_rows: '' };
 
 export function NewJobPage() {
   const { t } = useI18n();

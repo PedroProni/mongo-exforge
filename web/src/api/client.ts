@@ -1,8 +1,7 @@
+import { API_URL } from '../constants/api.constants';
 import { TOKEN_STORAGE_KEY } from '../constants/app.constants';
 import { ApiErrorBody, RequestOptions } from '../types/app.types';
 import { ApiError } from './api-error';
-
-const API_URL = import.meta.env.VITE_API_URL ?? '';
 
 function readMessage(body: ApiErrorBody | null, fallback: string): string {
   if (!body?.message) return fallback;

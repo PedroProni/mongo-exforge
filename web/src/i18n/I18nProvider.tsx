@@ -2,11 +2,9 @@ import { createContext, ReactNode, useContext, useMemo, useState } from 'react';
 import { DEFAULT_LANGUAGE, LANGUAGE_STORAGE_KEY, LANGUAGES } from '../constants/app.constants';
 import { I18nContextValue } from '../types/context.types';
 import { Language } from '../types/app.types';
-import en from './en.json';
-import pt from './pt.json';
+import { CATALOGS } from './catalogs.constants';
 import { createTranslate } from './translate';
 
-const CATALOGS = { en, pt };
 const I18nContext = createContext<I18nContextValue | null>(null);
 
 function initialLanguage(): Language {
