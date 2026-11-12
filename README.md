@@ -144,3 +144,9 @@ application/src
 ├── shared/          DTOs, validators, responses
 └── common/          env config and helpers
 ```
+
+## CI/CD
+
+Pull requests to `main` run `ci.yml`: `api` (unit tests, build), `web` (tests, build) and `e2e` (the API end-to-end suite against MongoDB, Redis and MinIO containers). The `ci` job is the required status check of `main`: a pull request cannot be merged until it passes.
+
+Every push to `main` that touches `application/**` or `web/**` runs `sync-demo-host.yml`: it applies that exact commit's change to the vendored copy in the private `PedroProni/orbit-demo-host` repository (`exforge/application` and `exforge/web`) and opens a `sync/mongo-exforge-<sha>` pull request there. The demo host runs its own tests and image build, merges the pull request by itself when they pass, waits for the Render deploy of the commit and then runs a smoke test against production. If the change cannot be applied (for example it conflicts with a demo-only patch) the job opens an issue in this repository. Needs the repository secret `DEMO_HOST_TOKEN` (fine-grained token limited to `orbit-demo-host`).
