@@ -1,0 +1,65 @@
+name: Sincronizar com o demo-host
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'application/**'
+      - 'web/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: sync-demo-host
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SOURCE_ID: mongo-exforge
+      HOST_REPO: PedroProni/orbit-demo-host
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          repository: PedroProni/orbit-demo-host
+          token: ${{ secrets.DEMO_HOST_TOKEN }}
+          path: host
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Aplicar a mudança da origem
+        id: apply
+        run: node host/scripts/sync/apply-source.mjs --source . --host host --id "$SOURCE_ID" --sha "$GITHUB_SHA"
+      - name: Abrir a PR no demo-host
+        if: steps.apply.outputs.changed == 'true'
+        working-directory: host
+        env:
+          GH_TOKEN: ${{ secrets.DEMO_HOST_TOKEN }}
+        run: |
+          SHORT="${GITHUB_SHA::7}"
+          BRANCH="sync/$SOURCE_ID-$SHORT"
+          for N in $(gh pr list --repo "$HOST_REPO" --state open --json number,headRefName -q ".[] | select(.headRefName | startswith(\"sync/$SOURCE_ID-\")) | .number"); do
+            gh pr close "$N" --repo "$HOST_REPO" --delete-branch --comment "Substituída pela sincronização $SHORT"
+          done
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add -A
+          git commit -m "Sincroniza $SOURCE_ID $SHORT"
+          git push origin "$BRANCH"
+          gh pr create --repo "$HOST_REPO" --base main --head "$BRANCH" --title "Sincroniza $SOURCE_ID $SHORT" --body "Origem: $GITHUB_REPOSITORY@$GITHUB_SHA"
+      - name: Registrar a falha na origem
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "Sincronização com o demo-host falhou em ${GITHUB_SHA::7}" --body "Execução: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
