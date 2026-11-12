@@ -14,13 +14,14 @@ export type Job = {
   status: JobStatus;
   export_format: ExportFormat;
   rows_exported: number;
+  file_size: number;
   attempts: number;
   max_rows: number | null;
   error: string | null;
   file_available: boolean;
   query: QueryItem[];
   fields: string[];
-  sort: Record<string, SortDirection>;
+  sort: Record<string, SortDirection | number>;
   created_at: string;
   started_at: string | null;
   finished_at: string | null;
@@ -33,3 +34,22 @@ export type CollectionInfo = { db_name: string; collection_name: string; collect
 export type CreateJobInput = { name: string; export_format: ExportFormat; query: QueryItem[]; fields?: string[]; max_rows?: number; sort?: Record<string, SortDirection> };
 export type RegisterInput = { name: string; surname: string; email: string; password: string };
 export type TokenResponse = { token: string };
+export type JobStatusFilter = JobStatus | '';
+export type JobListFilter = { status: JobStatusFilter; q: string };
+export type TemplateQueryItem = { connection_id: string; collection: string; field: string; operator: QueryOperator; value: QueryValue };
+export type Template = {
+  id: string;
+  name: string;
+  export_format: ExportFormat;
+  query: TemplateQueryItem[];
+  fields: string[];
+  sort: Record<string, SortDirection | number>;
+  max_rows: number;
+  created_at: string;
+  updated_at: string;
+};
+export type PreviewInput = { query: QueryItem[]; sort?: Record<string, SortDirection> };
+export type PreviewResult = { rows: Record<string, unknown>[]; columns: string[]; row_limit: number; estimated_total: number | null; estimate_capped: boolean };
+export type DashboardTotals = { exports: number; completed: number; failed: number; active: number; rows_exported: number; success_rate: number | null };
+export type DashboardSeriesPoint = { date: string; count: number };
+export type Dashboard = { window_days: number; totals: DashboardTotals; by_format: Record<ExportFormat, number>; series: DashboardSeriesPoint[]; recent: Job[] };

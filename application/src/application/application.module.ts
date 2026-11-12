@@ -10,6 +10,18 @@ import { CreateConnectionUseCase } from '@application/use-cases/connection/creat
 import { DeleteConnectionUseCase } from '@application/use-cases/connection/delete-connection.use-case';
 import { InspectConnectionUseCase } from '@application/use-cases/connection/inspect-connection.use-case';
 import { ListConnectionsUseCase } from '@application/use-cases/connection/list-connections.use-case';
+import { RerunJobUseCase } from '@application/use-cases/job/rerun-job.use-case';
+import { GetDashboardUseCase } from '@application/use-cases/dashboard/get-dashboard.use-case';
+import { PreviewSourceUseCase } from '@application/use-cases/mongo/preview-source.use-case';
+import { CreateTemplateUseCase } from '@application/use-cases/template/create-template.use-case';
+import { CreateTemplateFromJobUseCase } from '@application/use-cases/template/create-template-from-job.use-case';
+import { DeleteTemplateUseCase } from '@application/use-cases/template/delete-template.use-case';
+import { ListTemplatesUseCase } from '@application/use-cases/template/list-templates.use-case';
+import { RenameTemplateUseCase } from '@application/use-cases/template/rename-template.use-case';
+import { RunTemplateUseCase } from '@application/use-cases/template/run-template.use-case';
+import { JobInputResolverService } from '@application/services/job-input-resolver.service';
+import { SourceGroupService } from '@application/services/source-group.service';
+import { StoredInputService } from '@application/services/stored-input.service';
 import { DeleteJobUseCase } from '@application/use-cases/job/delete-job.use-case';
 import { ChangePasswordUseCase } from '@application/use-cases/user/change-password.use-case';
 import { DownloadJobUseCase } from '@application/use-cases/job/download-job.use-case';
@@ -29,6 +41,15 @@ const use_cases = [
   FindJobUseCase,
   DownloadJobUseCase,
   DeleteJobUseCase,
+  RerunJobUseCase,
+  GetDashboardUseCase,
+  PreviewSourceUseCase,
+  CreateTemplateUseCase,
+  CreateTemplateFromJobUseCase,
+  DeleteTemplateUseCase,
+  ListTemplatesUseCase,
+  RenameTemplateUseCase,
+  RunTemplateUseCase,
   CreateConnectionUseCase,
   ListConnectionsUseCase,
   DeleteConnectionUseCase,
@@ -46,7 +67,7 @@ const use_cases = [
 
 @Module({
   imports: [DatabaseModule, QueueModule, StorageModule],
-  providers: [...use_cases, EncryptionService, ExportStreamService],
+  providers: [...use_cases, EncryptionService, ExportStreamService, JobInputResolverService, SourceGroupService, StoredInputService],
   exports: [...use_cases],
 })
 export class ApplicationModule {}

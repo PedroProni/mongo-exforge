@@ -3,6 +3,7 @@ import { QueryValue } from '@domain/types/query-value.type';
 
 export type QueryProps = {
   uri: string;
+  connection_id?: string;
   collection: string;
   field: string;
   operator: QueryOperator;

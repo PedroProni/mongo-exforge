@@ -1,4 +1,4 @@
-import { CreateJobInput, QueryOperator, QueryValue } from '../types/api.types';
+import { CreateJobInput, PreviewInput, QueryItem, QueryOperator, QueryValue } from '../types/api.types';
 import { MATCH_ALL_FIELD } from '../constants/app.constants';
 import { JobDraft } from '../types/form.types';
 
@@ -26,13 +26,26 @@ function sourceOf(draft: JobDraft) {
   return draft.source === 'saved' ? { connection_id: draft.connection_id } : { uri: draft.uri };
 }
 
-export function buildJobInput(draft: JobDraft): CreateJobInput {
+function buildQuery(draft: JobDraft): QueryItem[] {
   const filters = draft.filters.filter(filter => filter.field.trim() !== '');
   const source = sourceOf(draft);
-  const query =
-    filters.length > 0
-      ? filters.map(filter => ({ ...source, collection: draft.collection, field: filter.field.trim(), operator: filter.operator, value: parseValue(filter.value, filter.operator) }))
-      : [{ ...source, collection: draft.collection, field: MATCH_ALL_FIELD, operator: 'ne' as QueryOperator, value: null }];
+  if (filters.length === 0) return [{ ...source, collection: draft.collection, field: MATCH_ALL_FIELD, operator: 'ne', value: null }];
+  return filters.map(filter => ({ ...source, collection: draft.collection, field: filter.field.trim(), operator: filter.operator, value: parseValue(filter.value, filter.operator) }));
+}
+
+export function buildPreviewInput(draft: JobDraft): PreviewInput {
+  const input: PreviewInput = { query: buildQuery(draft) };
+  if (draft.sort_field.trim() !== '') input.sort = { [draft.sort_field.trim()]: draft.sort_direction };
+  return input;
+}
+
+export function toggleField(fields: string, column: string): string {
+  const current = splitList(fields);
+  return (current.includes(column) ? current.filter(item => item !== column) : [...current, column]).join(', ');
+}
+
+export function buildJobInput(draft: JobDraft): CreateJobInput {
+  const query = buildQuery(draft);
   const fields = splitList(draft.fields);
   const input: CreateJobInput = { name: draft.name, export_format: draft.export_format, query };
   if (fields.length > 0) input.fields = fields;

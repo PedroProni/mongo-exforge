@@ -1,0 +1,5 @@
+export const DASHBOARD_WINDOW_DAYS = 90;
+export const DASHBOARD_SERIES_DAYS = 30;
+export const DASHBOARD_RECENT_LIMIT = 6;
+export const DASHBOARD_MAX_TIME_MS = 5000;
+export const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;

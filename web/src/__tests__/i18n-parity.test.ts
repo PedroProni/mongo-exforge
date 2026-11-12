@@ -16,6 +16,32 @@ const REQUIRED_KEYS = [
   'sort.desc',
   'new.submit',
   'jobs.downloadFailed',
+  'nav.dashboard',
+  'nav.templates',
+  'nav.openMenu',
+  'nav.closeMenu',
+  'theme.toLight',
+  'theme.toDark',
+  'dashboard.title',
+  'dashboard.window',
+  'dashboard.successRate',
+  'dashboard.chartLabel',
+  'jobs.search',
+  'jobs.statusFilter',
+  'jobs.details',
+  'jobs.fileSize',
+  'jobs.duration',
+  'jobs.rerun',
+  'jobs.saveTemplate',
+  'preview.title',
+  'preview.run',
+  'preview.estimate',
+  'preview.estimateCapped',
+  'preview.pickColumns',
+  'templates.title',
+  'templates.run',
+  'templates.rename',
+  'templates.saved',
 ];
 
 describe('i18n parity', () => {
@@ -37,6 +63,19 @@ describe('i18n parity', () => {
 
   it('never uses the em dash', () => {
     expect(JSON.stringify(en) + JSON.stringify(pt)).not.toContain(String.fromCharCode(8212));
+  });
+
+  it('has a translation for every key used by t() calls', () => {
+    const sources = import.meta.glob('../**/*.{ts,tsx}', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
+    const used = new Set<string>();
+    for (const [path, source] of Object.entries(sources)) {
+      if (path.includes('__tests__')) continue;
+      for (const match of source.matchAll(/\bt\('([\w.]+)'/g)) used.add(match[1]);
+    }
+    for (const key of used) {
+      expect((en as Record<string, string>)[key], key).toBeTruthy();
+      expect((pt as Record<string, string>)[key], key).toBeTruthy();
+    }
   });
 
   it('interpolates values and falls back to the key', () => {

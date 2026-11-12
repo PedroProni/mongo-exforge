@@ -4,9 +4,11 @@ import { Layout } from './components/Layout';
 import { useI18n } from './i18n/I18nProvider';
 import { AccountPage } from './pages/AccountPage';
 import { ConnectionsPage } from './pages/ConnectionsPage';
+import { DashboardPage } from './pages/DashboardPage';
 import { JobsPage } from './pages/JobsPage';
 import { LoginPage } from './pages/LoginPage';
 import { NewJobPage } from './pages/NewJobPage';
+import { TemplatesPage } from './pages/TemplatesPage';
 
 export function App() {
   const { user, loading } = useAuth();
@@ -17,8 +19,10 @@ export function App() {
     <HashRouter>
       <Routes>
         <Route element={<Layout />}>
-          <Route index element={<JobsPage />} />
+          <Route index element={<DashboardPage />} />
+          <Route path='exports' element={<JobsPage />} />
           <Route path='new' element={<NewJobPage />} />
+          <Route path='templates' element={<TemplatesPage />} />
           <Route path='connections' element={<ConnectionsPage />} />
           <Route path='account' element={<AccountPage />} />
           <Route path='*' element={<Navigate to='/' replace />} />

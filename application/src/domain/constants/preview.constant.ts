@@ -1,0 +1,8 @@
+export const PREVIEW_ROW_LIMIT = 20;
+export const PREVIEW_MAX_TIME_MS = 5000;
+export const PREVIEW_COUNT_MAX_TIME_MS = 3000;
+export const PREVIEW_COUNT_CAP = 100000;
+export const PREVIEW_MAX_STRING_LENGTH = 300;
+export const PREVIEW_MAX_GROUPS = 5;
+export const PREVIEW_RATE_LIMIT_PER_MINUTE = 30;
+export const PREVIEW_RATE_LIMIT_WINDOW_MS = 60 * 1000;

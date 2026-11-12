@@ -37,6 +37,9 @@ export class Job {
   file_key!: string;
 
   @Prop({ type: Number, default: 0 })
+  file_size!: number;
+
+  @Prop({ type: Number, default: 0 })
   rows_exported!: number;
 
   @Prop({ type: Number, default: 0 })
@@ -62,3 +65,4 @@ export class Job {
 export const JobSchema = SchemaFactory.createForClass(Job);
 JobSchema.index({ user_id: 1, created_at: -1 });
 JobSchema.index({ status: 1, finished_at: 1 });
+JobSchema.index({ user_id: 1, status: 1, created_at: -1 });

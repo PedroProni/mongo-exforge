@@ -13,7 +13,8 @@ export type JobResponse = {
   max_rows: number;
   error: string;
   file_available: boolean;
-  query: { collection: string; field: string; operator: string; value: QueryValue }[];
+  file_size: number;
+  query: { connection_id: string; collection: string; field: string; operator: string; value: QueryValue }[];
   fields: string[];
   sort: JobSort;
   created_at: Date;

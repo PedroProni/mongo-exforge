@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Transform } from 'stream';
 import { EnvConfigService } from '@common/env/services/env-config.service';
-import { EncryptionService } from '@application/services/encryption.service';
+import { SourceGroupService } from '@application/services/source-group.service';
 import { ExportStreamService } from '@application/services/export-stream.service';
 import { ExportRejectedError } from '@application/errors/export-rejected.error';
 import { EXPORT_CONTENT_TYPES, OBJECT_KEY_PREFIX, XLSX_MAX_ROWS } from '@domain/constants/export.constant';
@@ -12,9 +13,9 @@ import { StoragePort } from '@domain/ports/storage.port';
 import { JobRepository } from '@domain/repositories/job.repository';
 import { MongoRepository } from '@domain/repositories/mongo.repository';
 import { JOB_INJECT_TOKEN, MONGO_INJECT_TOKEN, STORAGE_INJECT_TOKEN } from '@domain/constants/inject.constant';
+import { ByteCounter } from '@domain/types/byte-counter.type';
 import { ExportCounter } from '@domain/types/export-counter.type';
 import { ExportRow } from '@domain/types/export-row.type';
-import { SourceGroup } from '@domain/types/source-group.type';
 
 @Injectable()
 export class RunExportUseCase {
@@ -24,7 +25,7 @@ export class RunExportUseCase {
     @Inject(JOB_INJECT_TOKEN) private readonly jobRepository: JobRepository,
     @Inject(MONGO_INJECT_TOKEN) private readonly mongoRepository: MongoRepository,
     @Inject(STORAGE_INJECT_TOKEN) private readonly storage: StoragePort,
-    private readonly encryptionService: EncryptionService,
+    private readonly sourceGroupService: SourceGroupService,
     private readonly exportStreamService: ExportStreamService,
     private readonly envConfigService: EnvConfigService,
   ) {}
@@ -41,7 +42,7 @@ export class RunExportUseCase {
     try {
       const first = await iterator.next();
       if (first.done) {
-        await this.jobRepository.markCompleted(job_id, { file_key: '', rows_exported: 0 });
+        await this.jobRepository.markCompleted(job_id, { file_key: '', file_size: 0, rows_exported: 0 });
         return;
       }
       await this.upload(job, first.value, iterator, counter);
@@ -67,20 +68,34 @@ export class RunExportUseCase {
 
     const key = `${OBJECT_KEY_PREFIX}/${job.getUserId()}/${job.getId()}.${job.getExportFormat()}`;
     const stream = this.exportStreamService.create(job.getExportFormat(), job.getFields(), chain());
+    const bytes: ByteCounter = { total: 0 };
+    const body = stream.pipe(this.byteCounter(bytes));
+    body.on('error', () => undefined);
+    stream.on('error', error => body.destroy(error));
     try {
-      await this.storage.upload({ key, body: stream, content_type: EXPORT_CONTENT_TYPES[job.getExportFormat()] });
+      await this.storage.upload({ key, body, content_type: EXPORT_CONTENT_TYPES[job.getExportFormat()] });
     } catch (error) {
       stream.on('error', () => undefined);
       stream.destroy(error as Error);
+      body.destroy();
       throw counter.rejection ?? error;
     }
-    await this.jobRepository.markCompleted(job.getId(), { file_key: key, rows_exported: counter.rows });
+    await this.jobRepository.markCompleted(job.getId(), { file_key: key, file_size: bytes.total, rows_exported: counter.rows });
+  }
+
+  private byteCounter(bytes: ByteCounter): Transform {
+    return new Transform({
+      transform(chunk: Buffer, _encoding, callback): void {
+        bytes.total += chunk.length;
+        callback(null, chunk);
+      },
+    });
   }
 
   private async *meter(job: JobEntity, counter: ExportCounter): AsyncGenerator<ExportRow> {
     const server_cap = job.getMaxRows() > 0 ? Math.min(job.getMaxRows(), this.envConfigService.getExportMaxRows()) : this.envConfigService.getExportMaxRows();
     const max_rows = job.getExportFormat() === ExportFormat.XLSX ? Math.min(server_cap, XLSX_MAX_ROWS) : server_cap;
-    const source = this.mongoRepository.stream({ groups: this.group(job), fields: job.getFields(), sort: job.getSort() });
+    const source = this.mongoRepository.stream({ groups: this.sourceGroupService.build(job.getQuery().map(item => item.toProps())), fields: job.getFields(), sort: job.getSort() });
     for await (const row of source) {
       counter.rows++;
       if (counter.rows > max_rows) {
@@ -90,17 +105,5 @@ export class RunExportUseCase {
       if (counter.rows % PROGRESS_FLUSH_ROWS === 0) await this.jobRepository.updateProgress(job.getId(), counter.rows);
       yield row;
     }
-  }
-
-  private group(job: JobEntity): SourceGroup[] {
-    const groups = new Map<string, SourceGroup>();
-    for (const query of job.getQuery()) {
-      const uri = this.encryptionService.decrypt(query.getUri());
-      const key = `${uri}\u0000${query.getCollection()}`;
-      const group = groups.get(key) ?? { uri, collection: query.getCollection(), filters: [] };
-      group.filters.push({ uri, collection: query.getCollection(), field: query.getField(), operator: query.getOperator(), value: query.getValue() });
-      groups.set(key, group);
-    }
-    return Array.from(groups.values());
   }
 }
