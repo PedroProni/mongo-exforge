@@ -16,6 +16,7 @@ export class JobEntity {
   private readonly fields: string[];
   private readonly sort: JobSort;
   private readonly file_key: string;
+  private readonly file_size: number;
   private readonly rows_exported: number;
   private readonly attempts: number;
   private readonly max_rows: number;
@@ -35,6 +36,7 @@ export class JobEntity {
     this.fields = props.fields;
     this.sort = props.sort;
     this.file_key = props.file_key;
+    this.file_size = props.file_size;
     this.rows_exported = props.rows_exported;
     this.attempts = props.attempts;
     this.max_rows = props.max_rows;
@@ -52,6 +54,7 @@ export class JobEntity {
       _id: randomUUID(),
       status: ExportStatus.PENDING,
       file_key: '',
+      file_size: 0,
       rows_exported: 0,
       attempts: 0,
       error: '',
@@ -100,6 +103,10 @@ export class JobEntity {
 
   getFileKey(): string {
     return this.file_key;
+  }
+
+  getFileSize(): number {
+    return this.file_size;
   }
 
   getRowsExported(): number {

@@ -2,6 +2,7 @@ import { BadRequestException, ServiceUnavailableException } from '@nestjs/common
 import { CreateJobUseCase } from '@application/use-cases/job/create-job.use-case';
 import { EnvConfigService } from '@common/env/services/env-config.service';
 import { ConnectionRepository } from '@domain/repositories/connection.repository';
+import { JobInputResolverService } from '@application/services/job-input-resolver.service';
 import { EncryptionService } from '@application/services/encryption.service';
 import { ExportFormat } from '@domain/enums/export-format.enum';
 import { QueryOperator } from '@domain/enums/query-operator.enum';
@@ -27,14 +28,13 @@ describe('CreateJobUseCase', () => {
     const enqueue = overrides.enqueue ?? jest.fn().mockResolvedValue(undefined);
     const encryption = { encrypt: (value: string) => `enc(${value})`, decrypt: (value: string) => value.replace(/^enc\(|\)$/g, '') } as unknown as EncryptionService;
     const findOwned = jest.fn().mockResolvedValue(overrides.connection_uri ? { getUri: () => overrides.connection_uri } : null);
-    const useCase = new CreateJobUseCase(
-      { create, markFailed } as unknown as JobRepository,
+    const resolver = new JobInputResolverService(
       { assertAllowed } as unknown as MongoRepository,
-      { enqueue },
       { findOwned } as unknown as ConnectionRepository,
       encryption,
       { getExportMaxRows: () => 1000 } as unknown as EnvConfigService,
     );
+    const useCase = new CreateJobUseCase({ create, markFailed } as unknown as JobRepository, { enqueue }, resolver);
     return { useCase, create, markFailed, assertAllowed, enqueue, findOwned };
   }
 

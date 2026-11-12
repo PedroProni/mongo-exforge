@@ -88,6 +88,22 @@ describe('local storage driver (e2e)', () => {
       .expect(404);
   });
 
+  it('fails a job that exceeds its row limit without taking the process down', async () => {
+    const created = await http()
+      .post('/job')
+      .set(auth(tokenA))
+      .send({ name: 'Too many rows', export_format: 'csv', max_rows: 5, query: [{ uri: sourceUri, collection: 'people', field: 'age', operator: 'gte', value: 0 }] })
+      .expect(201);
+    let body: { status: string; error: string } = { status: '', error: '' };
+    for (let attempt = 0; attempt < POLL_ATTEMPTS && body.status !== 'completed' && body.status !== 'failed'; attempt++) {
+      body = (await http().get(`/job/${created.body.id}`).set(auth(tokenA)).expect(200)).body;
+      if (body.status !== 'failed') await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS));
+    }
+    expect(body.status).toBe('failed');
+    expect(body.error).toContain('exceeds the limit of 5 rows');
+    await http().get('/health').expect(200);
+  });
+
   it('removes the file from disk when the job is deleted', async () => {
     const link = (await http().get(`/job/${jobId}/download-url`).set(auth(tokenA)).expect(200)).body.url as string;
     await http().delete(`/job/${jobId}`).set(auth(tokenA)).expect(204);

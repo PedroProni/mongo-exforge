@@ -13,6 +13,7 @@ export type JobProps = {
   fields: string[];
   sort: JobSort;
   file_key: string;
+  file_size: number;
   rows_exported: number;
   attempts: number;
   max_rows: number;

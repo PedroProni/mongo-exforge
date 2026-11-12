@@ -4,6 +4,7 @@ import { QueryValue } from '@domain/types/query-value.type';
 
 export class QueryEntity {
   private readonly uri: string;
+  private readonly connection_id: string;
   private readonly collection: string;
   private readonly field: string;
   private readonly operator: QueryOperator;
@@ -11,6 +12,7 @@ export class QueryEntity {
 
   constructor(props: QueryProps) {
     this.uri = props.uri;
+    this.connection_id = props.connection_id ?? '';
     this.collection = props.collection;
     this.field = props.field;
     this.operator = props.operator;
@@ -19,6 +21,10 @@ export class QueryEntity {
 
   getUri(): string {
     return this.uri;
+  }
+
+  getConnectionId(): string {
+    return this.connection_id;
   }
 
   getCollection(): string {
@@ -38,6 +44,7 @@ export class QueryEntity {
   }
 
   toProps(): QueryProps {
-    return { uri: this.uri, collection: this.collection, field: this.field, operator: this.operator, value: this.value };
+    const props: QueryProps = { uri: this.uri, collection: this.collection, field: this.field, operator: this.operator, value: this.value };
+    return this.connection_id ? { ...props, connection_id: this.connection_id } : props;
   }
 }

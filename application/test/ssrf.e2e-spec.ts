@@ -57,4 +57,21 @@ describe('source uri guard with private addresses disabled (e2e)', () => {
       .send(payload(uri))
       .expect(400);
   });
+
+  it.each(['mongodb://127.0.0.1:27017/db', 'mongodb://169.254.169.254/db', 'mongodb://10.0.0.5/db'])('refuses to preview %s', async uri => {
+    const response = await request(app.getHttpServer())
+      .post('/preview')
+      .set({ Authorization: `Bearer ${token}` })
+      .send({ query: [{ uri, collection: 'people', field: 'age', operator: 'eq', value: 1 }] })
+      .expect(400);
+    expect(JSON.stringify(response.body)).not.toContain('27017/db');
+  });
+
+  it.each(['mongodb://127.0.0.1:27017/db', 'mongodb://169.254.169.254/db'])('refuses to save a template for %s', async uri => {
+    await request(app.getHttpServer())
+      .post('/template')
+      .set({ Authorization: `Bearer ${token}` })
+      .send(payload(uri))
+      .expect(400);
+  });
 });

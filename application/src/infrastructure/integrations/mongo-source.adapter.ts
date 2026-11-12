@@ -6,6 +6,9 @@ import { MONGO_CONNECT_TIMEOUT_MS, MONGO_SERVER_SELECTION_TIMEOUT_MS } from '@do
 import { COLLECTION_NAME_PATTERN, FIELD_PATH_PATTERN, INSPECT_SAMPLE_SIZE, MAX_INSPECT_COLLECTIONS, SYSTEM_COLLECTION_PREFIX } from '@domain/constants/query-validation.constant';
 import { CollectionEntity } from '@domain/entities/collection.entity';
 import { MongoRepository } from '@domain/repositories/mongo.repository';
+import { PREVIEW_COUNT_CAP, PREVIEW_COUNT_MAX_TIME_MS, PREVIEW_MAX_TIME_MS } from '@domain/constants/preview.constant';
+import { PreviewOptions } from '@domain/types/preview-options.type';
+import { PreviewResult } from '@domain/types/preview-result.type';
 import { ExportRow } from '@domain/types/export-row.type';
 import { JobSort } from '@domain/types/job-sort.type';
 import { QueryProps } from '@domain/types/query-props.type';
@@ -67,6 +70,36 @@ export class MongoSourceAdapter implements MongoRepository {
         await client.close();
       }
     }
+  }
+
+  async preview(options: PreviewOptions): Promise<PreviewResult> {
+    const rows: ExportRow[] = [];
+    let total = 0;
+    let known = true;
+    let capped = false;
+    for (const group of options.groups) {
+      const client = await this.connect(group.uri);
+      try {
+        const db = client.db();
+        await this.assertCollection(db, group.collection);
+        const filter = this.buildFilter(group.filters);
+        const collection = db.collection(group.collection);
+        const remaining = options.limit - rows.length;
+        if (remaining > 0) {
+          rows.push(...(await collection.find(filter, { projection: this.buildProjection(options.fields), sort: this.buildSort(options.sort), limit: remaining, maxTimeMS: PREVIEW_MAX_TIME_MS }).toArray()));
+        }
+        try {
+          const count = await collection.countDocuments(filter, { limit: PREVIEW_COUNT_CAP, maxTimeMS: PREVIEW_COUNT_MAX_TIME_MS });
+          total += count;
+          if (count >= PREVIEW_COUNT_CAP) capped = true;
+        } catch {
+          known = false;
+        }
+      } finally {
+        await client.close();
+      }
+    }
+    return { rows, estimated_total: known ? total : null, estimate_capped: known && capped };
   }
 
   private async connect(uri: string): Promise<MongoClient> {

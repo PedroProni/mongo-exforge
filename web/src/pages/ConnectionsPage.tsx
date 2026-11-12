@@ -51,43 +51,47 @@ export function ConnectionsPage() {
   };
 
   return (
-    <section>
-      <h2>{t('connections.title')}</h2>
-      <form onSubmit={add} className='stack'>
-        <label>
-          {t('connections.name')}
-          <input required value={name} onChange={event => setName(event.target.value)} />
-        </label>
-        <label>
-          {t('connections.uri')}
-          <input required value={uri} onChange={event => setUri(event.target.value)} autoComplete='off' />
-        </label>
-        <div className='row'>
-          <button type='button' disabled={!uri} onClick={() => void test()}>
-            {t('connections.test')}
-          </button>
-          <button type='submit'>{t('connections.add')}</button>
-        </div>
-      </form>
-      {items === null ? (
-        <p>{t('common.loading')}</p>
-      ) : items.length === 0 ? (
-        <p>{t('common.empty')}</p>
-      ) : (
-        <ul className='list'>
-          {items.map(item => (
-            <li key={item.id}>
-              <div>
-                <strong>{item.name}</strong>
-                <div className='small mono'>{item.uri_masked}</div>
-              </div>
-              <button type='button' className='danger' onClick={() => void remove(item)}>
-                {t('common.delete')}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
+    <div className='page'>
+      <header className='page-head'>
+        <h1>{t('connections.title')}</h1>
+      </header>
+      <section className='card'>
+        <form onSubmit={add} className='stack'>
+          <label>
+            {t('connections.name')}
+            <input required value={name} onChange={event => setName(event.target.value)} />
+          </label>
+          <label>
+            {t('connections.uri')}
+            <input required value={uri} onChange={event => setUri(event.target.value)} autoComplete='off' />
+          </label>
+          <div className='row'>
+            <button type='button' disabled={!uri} onClick={() => void test()}>
+              {t('connections.test')}
+            </button>
+            <button type='submit'>{t('connections.add')}</button>
+          </div>
+        </form>
+        {items === null ? (
+          <p>{t('common.loading')}</p>
+        ) : items.length === 0 ? (
+          <p>{t('common.empty')}</p>
+        ) : (
+          <ul className='list'>
+            {items.map(item => (
+              <li key={item.id}>
+                <div>
+                  <strong>{item.name}</strong>
+                  <div className='small mono'>{item.uri_masked}</div>
+                </div>
+                <button type='button' className='danger' onClick={() => void remove(item)}>
+                  {t('common.delete')}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </div>
   );
 }
